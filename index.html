@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSLuv Palette</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            height: 100%;
+            max-width: 100%;
+            overflow-x: clip;
+        }
+        body {
+            --accent: #4f46e5;
+            --palette-fill-h: calc((100vh - 2rem - 0.75rem) / 2);
+            font-family: system-ui, sans-serif;
+            background: #0a0a0f;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        input[type="text"] {
+            font-family: ui-monospace, monospace;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            width: 7rem;
+            text-transform: uppercase;
+        }
+        input[type="text"]:focus { outline: none; border-color: var(--accent); }
+        input[type="text"].error { border-color: #f43f5e; }
+        button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        button:hover { filter: brightness(1.1); }
+        button.ghost {
+            background: #1a1a24;
+            border: 1px solid #333;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+        button.ghost:hover { color: #fff; border-color: #555; filter: none; }
+        button.ghost.fill-v {
+            flex: 1;
+            min-height: 2.5rem;
+            height: auto;
+            width: 2.5rem;
+        }
+        button.ghost.danger:hover { border-color: #f43f5e; color: #f43f5e; }
+        #palettesContainer {
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        body.scroll-palettes {
+            height: auto;
+            overflow-y: auto;
+        }
+        body.scroll-palettes #palettesContainer {
+            flex: none;
+            min-height: auto;
+        }
+        body.scroll-palettes .palette-block {
+            flex: none;
+            height: var(--palette-fill-h);
+            min-height: var(--palette-fill-h);
+        }
+        body.scroll-palettes .palette-main {
+            flex: 1;
+            min-height: 0;
+        }
+        .palette-block {
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 10px;
+            border: 1px solid #1a1a24;
+            background: #0d0d12;
+            overflow-x: clip;
+        }
+        .palette-toolbar {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .toolbar-spacer {
+            flex: 1;
+            min-width: 0;
+        }
+        .color-space-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-shrink: 0;
+        }
+        .color-space-toggle-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+        .color-space-toggle-btns {
+            display: flex;
+            border: 1px solid #333;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .color-space-toggle-btns button {
+            padding: 0.35rem 0.55rem;
+            font-size: 0.72rem;
+            border-radius: 0;
+            background: #1a1a24;
+            color: #94a3b8;
+        }
+        .color-space-toggle-btns button:hover {
+            filter: none;
+            color: #e2e8f0;
+        }
+        .color-space-toggle-btns button.active {
+            background: var(--accent);
+            color: #fff;
+        }
+        .toolbar-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+        .input-with-eye {
+            position: relative;
+            display: inline-flex;
+            width: 7rem;
+        }
+        .input-with-eye input[type="text"] {
+            width: 100%;
+            padding-right: 1.65rem;
+        }
+        .bg-eye {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 1.65rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 0 6px 6px 0;
+        }
+        .bg-eye:hover { color: #e2e8f0; }
+        .bg-eye.active { color: var(--accent); }
+        .bg-eye svg {
+            width: 1rem;
+            height: 1rem;
+            display: block;
+        }
+        .palette-main {
+            --palette-radius: 12px;
+            --swatch-radius: 6px;
+            --palette-pad: 6px;
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+            max-width: 100%;
+            display: flex;
+            align-items: stretch;
+            gap: 0.5rem;
+            overflow-x: clip;
+        }
+        .palette-preview {
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+            max-width: 100%;
+            border-radius: var(--palette-radius);
+            padding: var(--palette-pad);
+            display: flex;
+            transition: background-color 0.15s;
+            overflow-x: clip;
+        }
+        .palette-preview .palette-row {
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+        }
+        .swatch-hex-center {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            width: 100%;
+        }
+        .swatch-hex-row {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            width: 100%;
+            max-width: 100%;
+        }
+        .swatch-hex-row.hex-stacked {
+            flex-direction: column;
+            gap: var(--swatch-label-icon-gap);
+        }
+        .swatch-hex-row.hex-stacked .hex {
+            width: 100%;
+            max-width: 100%;
+        }
+        .swatch .hex {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+            cursor: pointer;
+            opacity: 0.9;
+            text-align: center;
+            font-family: ui-monospace, monospace;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .swatch-hex-row:not(.hex-stacked) .hex {
+            max-width: calc(100% - 24px - 0.4rem);
+        }
+        .swatch .hex:hover { opacity: 1; }
+        .swatch .hex-input {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            font-family: ui-monospace, monospace;
+            width: 4.5rem;
+            padding: 0.1rem 0.2rem;
+            border: 1px solid var(--accent);
+            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.35);
+            color: inherit;
+            text-align: center;
+            text-transform: uppercase;
+            outline: none;
+        }
+        .swatch.light .hex-input { background: rgba(255, 255, 255, 0.65); }
+        .swatch .hex-input.error { border-color: #f43f5e; }
+        .swatch-hex-edit {
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            border-radius: 3px;
+            opacity: 0.85;
+        }
+        .swatch-hex-edit:hover:not(:disabled) { opacity: 1; }
+        .swatch-hex-edit:disabled {
+            opacity: 0.28;
+            cursor: not-allowed;
+        }
+        .swatch-hex-edit svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+        }
+        .swatch-contrasts {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+            flex-shrink: 0;
+            width: 100%;
+            text-align: center;
+        }
+        .swatch .contrast-line {
+            font-size: 0.72rem;
+            opacity: 0.85;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+        }
+        .palette-row {
+            display: flex;
+            flex: 1;
+            gap: var(--palette-pad, 6px);
+            min-width: 0;
+            min-height: 0;
+            align-items: stretch;
+        }
+        .swatch {
+            --swatch-label-icon-gap: 0.15rem;
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+            border-radius: var(--swatch-radius, 6px);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem 0.25rem;
+            font-family: ui-monospace, monospace;
+        }
+        .swatch.light { color: #0a0a0f; }
+        .swatch.dark { color: #f8fafc; }
+        .swatch.selected { outline: 2px solid var(--accent); outline-offset: 2px; z-index: 1; }
+        .steps-ctrl {
+            display: flex;
+            flex-direction: column;
+            gap: var(--palette-pad, 6px);
+            width: 2.5rem;
+            align-items: stretch;
+            flex-shrink: 0;
+            align-self: stretch;
+            min-height: 0;
+        }
+        .steps-grow {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--palette-pad, 6px);
+            width: 100%;
+        }
+        .steps-grow .ghost.fill-v {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            border-radius: var(--palette-radius, 12px);
+        }
+        .steps-ctrl > .ghost {
+            flex-shrink: 0;
+            width: 100%;
+            border-radius: var(--palette-radius, 12px);
+        }
+        .step-count {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            font-family: ui-monospace, monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            line-height: 1;
+            text-align: center;
+        }
+        .palette-editor {
+            flex-shrink: 0;
+            min-width: 0;
+            max-width: 100%;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            overflow-x: clip;
+        }
+        .swatch-head {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--swatch-label-icon-gap);
+            flex-shrink: 0;
+        }
+        .swatch-name {
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+            opacity: 0.9;
+        }
+        .swatch-pin {
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            border-radius: 3px;
+            opacity: 0.85;
+        }
+        .swatch-pin:hover { opacity: 1; }
+        .swatch-pin.active {
+            color: #fff;
+            background: var(--accent);
+            opacity: 1;
+        }
+        .swatch-pin svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+        }
+        .slider-ramp-wrap.ramp-mode .ramp-hint {
+            position: absolute;
+            bottom: calc(100% + 4px);
+            transform: translateX(-50%);
+            padding: 0.2rem 0.4rem;
+            font-size: 0.65rem;
+            line-height: 1.2;
+            color: #e2e8f0;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.12s;
+            z-index: 4;
+        }
+        .slider-ramp-wrap.ramp-mode .ramp-hint.visible {
+            opacity: 1;
+        }
+        .slider-ramp-wrap:not(.ramp-mode) .ramp-hint {
+            display: none;
+            opacity: 0;
+        }
+        label,
+        .label-l {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            min-width: 0;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+        .slider-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 0.35rem;
+            min-width: 0;
+        }
+        label span.val,
+        .slider-top .val {
+            font-family: ui-monospace, monospace;
+            color: #e2e8f0;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .slider-top .slider-axis {
+            flex-shrink: 0;
+        }
+        input[type="range"] { width: 100%; accent-color: #e2e8f0; }
+        .palette-editor.accent-hs .slider-ramp-wrap[data-prop="h"] input[type="range"],
+        .palette-editor.accent-hs .slider-ramp-wrap[data-prop="s"] input[type="range"] {
+            accent-color: var(--accent);
+        }
+        .palette-editor.accent-hs .slider-ramp-wrap[data-prop="h"] .track-fill,
+        .palette-editor.accent-hs .slider-ramp-wrap[data-prop="s"] .track-fill {
+            background: var(--accent);
+        }
+        .palette-editor.accent-hs .slider-ramp-wrap[data-prop="h"] input[type="range"]::-webkit-slider-thumb,
+        .palette-editor.accent-hs .slider-ramp-wrap[data-prop="s"] input[type="range"]::-webkit-slider-thumb {
+            background: var(--accent);
+        }
+        .palette-editor.accent-hs .slider-ramp-wrap[data-prop="h"] input[type="range"]::-moz-range-thumb,
+        .palette-editor.accent-hs .slider-ramp-wrap[data-prop="s"] input[type="range"]::-moz-range-thumb {
+            background: var(--accent);
+        }
+        .palette-editor.accent-l .slider-ramp-wrap[data-prop="l"] input[type="range"] {
+            accent-color: var(--accent);
+        }
+        .palette-editor.accent-l .slider-ramp-wrap[data-prop="l"] .track-fill {
+            background: var(--accent);
+        }
+        .palette-editor.accent-l .slider-ramp-wrap[data-prop="l"] input[type="range"]::-webkit-slider-thumb {
+            background: var(--accent);
+        }
+        .palette-editor.accent-l .slider-ramp-wrap[data-prop="l"] input[type="range"]::-moz-range-thumb {
+            background: var(--accent);
+        }
+        .slider-ramp-wrap {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 1.25rem;
+            overflow-x: clip;
+            overflow-y: visible;
+        }
+        .slider-ramp-wrap .track-bg,
+        .slider-ramp-wrap .track-fill {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            height: 4px;
+            border-radius: 2px;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        .slider-ramp-wrap .track-bg {
+            width: 100%;
+            background: #334155;
+        }
+        .slider-ramp-wrap .track-fill {
+            background: #e2e8f0;
+        }
+        .slider-ramp-wrap input[type="range"] {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1.25rem;
+            margin: 0;
+            padding: 0;
+            transform: translateY(-50%);
+            background: transparent;
+            -webkit-appearance: none;
+            appearance: none;
+            accent-color: #e2e8f0;
+        }
+        .slider-ramp-wrap input[type="range"]::-webkit-slider-runnable-track {
+            height: 4px;
+            background: transparent;
+            border-radius: 2px;
+        }
+        .slider-ramp-wrap input[type="range"]::-moz-range-track {
+            height: 4px;
+            background: transparent;
+            border-radius: 2px;
+        }
+        .slider-ramp-wrap input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            margin-top: -5px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            border: none;
+            cursor: pointer;
+        }
+        .slider-ramp-wrap input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            border: none;
+            cursor: pointer;
+        }
+        .slider-ramp-wrap.ramp-mode {
+            cursor: pointer;
+            touch-action: none;
+        }
+        .slider-ramp-wrap.ramp-mode input.ramp-handle {
+            pointer-events: none;
+        }
+        .slider-ramp-wrap .ramp-max { z-index: 2; }
+        .slider-ramp-wrap .ramp-min { z-index: 1; }
+        .slider-ramp-wrap.ramp-mode input.ramp-single { display: none; }
+        .slider-ramp-wrap:not(.ramp-mode) input.ramp-handle { display: none; }
+        .slider-ramp-wrap.slider-inactive {
+            pointer-events: none;
+            cursor: default;
+        }
+        .slider-ramp-wrap.slider-inactive .track-bg {
+            left: 0;
+            width: 100%;
+            opacity: 0.35;
+        }
+        .slider-ramp-wrap.slider-inactive .track-fill,
+        .slider-ramp-wrap.slider-inactive input[type="range"],
+        .slider-ramp-wrap.slider-inactive .l-pin-handles,
+        .slider-ramp-wrap.slider-inactive .ramp-hint {
+            display: none !important;
+        }
+        .l-slider-stack {
+            position: relative;
+            min-width: 0;
+            max-width: 100%;
+            overflow-x: clip;
+            overflow-y: visible;
+        }
+        .label-l.l-await-interp .l-slider-stack {
+            pointer-events: none;
+        }
+        .label-l.l-await-interp .l-interpolate-cta {
+            pointer-events: auto;
+        }
+        .l-interpolate-cta {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translate(-50%, calc(-100% - 2px));
+            padding: 0;
+            border: none;
+            background: none;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--accent);
+            cursor: pointer;
+            white-space: nowrap;
+            z-index: 5;
+            display: none;
+        }
+        .label-l.l-await-interp .l-interpolate-cta {
+            display: block;
+        }
+        .slider-ramp-wrap.ramp-mode,
+        .slider-ramp-wrap.l-pin-ramp-mode {
+            pointer-events: auto;
+        }
+        .slider-ramp-wrap[data-prop="l"].l-pin-ramp-mode .l-pin-handles {
+            display: block;
+        }
+        .slider-ramp-wrap[data-prop="l"] .l-pin-handles {
+            display: none;
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 3;
+        }
+        .slider-ramp-wrap[data-prop="l"].l-pin-ramp-mode {
+            cursor: pointer;
+            touch-action: none;
+        }
+        .slider-ramp-wrap[data-prop="l"].l-pin-ramp-mode .l-pin-handles {
+            pointer-events: auto;
+        }
+        .slider-ramp-wrap[data-prop="l"].l-pin-ramp-mode input[type="range"] {
+            display: none !important;
+        }
+        .l-pin-hint-marker {
+            position: absolute;
+            bottom: calc(100% + 4px);
+            transform: translateX(-50%);
+            padding: 0.2rem 0.4rem;
+            font-size: 0.65rem;
+            line-height: 1.2;
+            color: #e2e8f0;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.12s;
+            z-index: 4;
+        }
+        .l-pin-hint-marker.visible {
+            opacity: 1;
+        }
+        .l-pin-thumb {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .sliders {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.5rem;
+            min-width: 0;
+            max-width: 100%;
+        }
+        @media (max-width: 600px) {
+            .sliders { grid-template-columns: 1fr; }
+            .swatch-contrasts { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="palettesContainer"></div>
+
+    <script type="module">
+        import { Hsluv } from 'https://esm.sh/hsluv@1.0.1';
+        import { Hct } from 'https://esm.sh/@material/material-color-utilities@0.3.0';
+        import { calcContrast } from 'https://esm.sh/apcach@0.6.4';
+
+        const COLOR_SPACE = 'srgb';
+        const L_START = 95;
+        const L_END = 5;
+        const AXIS_LABELS = {
+            hsluv: { h: 'Hue', s: 'Saturation', l: 'Lightness' },
+            hct: { h: 'Hue', s: 'Chroma', l: 'Tone' }
+        };
+        let colorSpace = 'hsluv';
+        const conv = new Hsluv();
+
+        function stepScaleName(index) {
+            return String(50 * (index + 1));
+        }
+
+        function normalizeHex(hex) {
+            const h = hex.replace(/^#/, '').trim();
+            if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+            return '#' + h.toUpperCase();
+        }
+
+        function hexToArgb(hex) {
+            const norm = normalizeHex(hex);
+            if (!norm) return null;
+            return (0xff << 24) | parseInt(norm.slice(1), 16);
+        }
+
+        function argbToHex(argb) {
+            return '#' + (argb & 0xffffff).toString(16).padStart(6, '0').toUpperCase();
+        }
+
+        function hexToHsluv(hex) {
+            const norm = normalizeHex(hex);
+            if (!norm) return null;
+            conv.hex = norm;
+            conv.hexToHsluv();
+            if ([conv.hsluv_h, conv.hsluv_s, conv.hsluv_l].some(Number.isNaN)) return null;
+            return { h: conv.hsluv_h, s: conv.hsluv_s, l: conv.hsluv_l };
+        }
+
+        function hsluvToHex(h, s, l) {
+            conv.hsluv_h = ((h % 360) + 360) % 360;
+            conv.hsluv_s = Math.max(0, Math.min(100, s));
+            conv.hsluv_l = Math.max(0, Math.min(100, l));
+            conv.hsluvToHex();
+            return conv.hex ? conv.hex.toUpperCase() : null;
+        }
+
+        function hexToHct(hex) {
+            const argb = hexToArgb(hex);
+            if (argb == null) return null;
+            try {
+                const hct = Hct.fromInt(argb);
+                return {
+                    h: hct.hue,
+                    s: Math.max(0, Math.min(100, hct.chroma)),
+                    l: Math.max(0, Math.min(100, hct.tone))
+                };
+            } catch { return null; }
+        }
+
+        function hctToHex(h, s, l) {
+            try {
+                const hue = ((h % 360) + 360) % 360;
+                const chroma = Math.max(0, Math.min(100, s));
+                const tone = Math.max(0, Math.min(100, l));
+                return argbToHex(Hct.from(hue, chroma, tone).toInt());
+            } catch { return null; }
+        }
+
+        function hexToModel(hex) {
+            return colorSpace === 'hct' ? hexToHct(hex) : hexToHsluv(hex);
+        }
+
+        function modelToHex(h, s, l) {
+            return colorSpace === 'hct' ? hctToHex(h, s, l) : hsluvToHex(h, s, l);
+        }
+
+        function updateColorSpaceLabels(block) {
+            const labels = AXIS_LABELS[colorSpace];
+            const editor = block.querySelector('.palette-editor');
+            if (!editor) return;
+            editor.querySelector('.slider-axis-h').textContent = labels.h;
+            editor.querySelector('.slider-axis-s').textContent = labels.s;
+            editor.querySelector('.slider-axis-l').textContent = labels.l;
+        }
+
+        function setColorSpace(next) {
+            if (next !== 'hsluv' && next !== 'hct') return;
+            if (colorSpace === next) return;
+            colorSpace = next;
+            palettes.forEach(pal => refreshStepHex(pal));
+            render();
+        }
+
+        function buildColorSpaceToggle() {
+            const wrap = document.createElement('div');
+            wrap.className = 'color-space-toggle';
+            const label = document.createElement('span');
+            label.className = 'color-space-toggle-label';
+            label.textContent = 'Prostor';
+            const btns = document.createElement('div');
+            btns.className = 'color-space-toggle-btns';
+            [['hsluv', 'HSLuv'], ['hct', 'HCT']].forEach(([id, text]) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = text;
+                btn.classList.toggle('active', colorSpace === id);
+                btn.onclick = () => setColorSpace(id);
+                btns.appendChild(btn);
+            });
+            wrap.append(label, btns);
+            return wrap;
+        }
+
+        function hexToRgb(hex) {
+            const norm = normalizeHex(hex);
+            if (!norm) return null;
+            const h = norm.slice(1);
+            return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+        }
+
+        function isLightHex(hex) {
+            const rgb = hexToRgb(hex);
+            if (!rgb) return true;
+            const y = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
+            return y > 0.55;
+        }
+
+        function getApcaContrast(fgHex, bgHex) {
+            try {
+                return calcContrast(fgHex, bgHex, 'apca', COLOR_SPACE);
+            } catch { return null; }
+        }
+
+        function calcWcagRatio(fgHex, bgHex) {
+            const fg = hexToRgb(fgHex), bg = hexToRgb(bgHex);
+            if (!fg || !bg) return null;
+            const lin = c => {
+                c /= 255;
+                return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+            };
+            const l1 = 0.2126 * lin(fg[0]) + 0.7152 * lin(fg[1]) + 0.0722 * lin(fg[2]);
+            const l2 = 0.2126 * lin(bg[0]) + 0.7152 * lin(bg[1]) + 0.0722 * lin(bg[2]);
+            const lighter = Math.max(l1, l2);
+            const darker = Math.min(l1, l2);
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+
+        function copyHex(el, hex) {
+            navigator.clipboard?.writeText(hex);
+            const prev = el.textContent;
+            el.textContent = 'Zkopírováno';
+            setTimeout(() => { el.textContent = prev; }, 700);
+        }
+
+        const DEFAULT_STEPS = 10;
+        const DEFAULT_HEX = '#C00000';
+        const DEFAULT_BG = '#FFFFFF';
+
+        let palettes = [];
+        let sharedStepCount = DEFAULT_STEPS;
+        const $ = id => document.getElementById(id);
+
+        function stepPinT(step, index, n) {
+            if (step.pinT != null) return step.pinT;
+            return n > 1 ? index / (n - 1) : 0;
+        }
+
+        function pinTToIndex(pinT, n) {
+            if (n <= 1) return 0;
+            return Math.max(0, Math.min(n - 1, Math.round(pinT * (n - 1))));
+        }
+
+        function assignPinsToIndices(pins, n) {
+            if (n <= 1) return pins.length ? [{ pin: pins[0], idx: 0 }] : [];
+            const sorted = [...pins].sort((a, b) => a.t - b.t);
+            const used = new Set();
+            const out = [];
+            for (const pin of sorted) {
+                let idx = pinTToIndex(pin.t, n);
+                if (!used.has(idx)) {
+                    used.add(idx);
+                    out.push({ pin, idx });
+                    continue;
+                }
+                let placed = false;
+                for (let d = 1; d < n && !placed; d++) {
+                    for (const c of [idx - d, idx + d]) {
+                        if (c >= 0 && c < n && !used.has(c)) {
+                            used.add(c);
+                            out.push({ pin, idx: c });
+                            placed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            return out;
+        }
+
+        function remapIndexByT(t, n, pinAssignments) {
+            const hit = pinAssignments.find(a => a.pin.t === t);
+            return hit ? hit.idx : pinTToIndex(t, n);
+        }
+
+        function setSelection(pal, index) {
+            const n = pal.steps.length;
+            if (index == null || index < 0 || index >= n) {
+                pal.selected = null;
+                delete pal.selectedT;
+                return;
+            }
+            pal.selected = index;
+            pal.selectedT = stepPinT(pal.steps[index], index, n);
+        }
+
+        function resamplePaletteSteps(pal, newCount) {
+            const oldSteps = pal.steps;
+            const oldN = oldSteps.length;
+            const n = Math.max(2, Math.min(24, newCount));
+            if (oldN < 1 || oldN === n) {
+                pal.steps.length = n;
+                return;
+            }
+
+            const pinnedSnapshots = oldSteps
+                .map((step, i) => ({
+                    t: stepPinT(step, i, oldN),
+                    h: step.h,
+                    s: step.s,
+                    l: step.l,
+                    hex: step.hex,
+                    pinned: !!step.pinned
+                }))
+                .filter(s => s.pinned);
+
+            const newSteps = Array.from({ length: n }, (_, i) => {
+                const t = i / (n - 1);
+                const pos = t * (oldN - 1);
+                const i0 = Math.floor(pos);
+                const i1 = Math.min(i0 + 1, oldN - 1);
+                const frac = i1 === i0 ? 0 : pos - i0;
+                const a = oldSteps[i0];
+                const b = oldSteps[i1];
+                const h = a.h + (b.h - a.h) * frac;
+                const s = a.s + (b.s - a.s) * frac;
+                const l = a.l + (b.l - a.l) * frac;
+                return {
+                    h, s, l,
+                    hex: modelToHex(h, s, l) ?? a.hex,
+                    pinned: false
+                };
+            });
+
+            const pinAssignments = assignPinsToIndices(pinnedSnapshots, n);
+            for (const { pin, idx } of pinAssignments) {
+                newSteps[idx] = {
+                    h: pin.h,
+                    s: pin.s,
+                    l: pin.l,
+                    hex: pin.hex,
+                    pinned: true,
+                    pinT: pin.t
+                };
+            }
+
+            pal.steps = newSteps;
+
+            if (pal.selected != null || pal.selectedT != null) {
+                const selT = pal.selectedT != null
+                    ? pal.selectedT
+                    : stepPinT(oldSteps[pal.selected], pal.selected, oldN);
+                pal.selected = remapIndexByT(selT, n, pinAssignments);
+                pal.selectedT = selT;
+            }
+
+            if (pal.hexEditIndex != null) {
+                const editT = pal.hexEditT != null
+                    ? pal.hexEditT
+                    : (oldN > 1 ? pal.hexEditIndex / (oldN - 1) : 0);
+                pal.hexEditIndex = remapIndexByT(editT, n, pinAssignments);
+                pal.hexEditT = editT;
+                pal.selected = pal.hexEditIndex;
+                pal.selectedT = editT;
+            }
+        }
+
+        function setSharedStepCount(n) {
+            sharedStepCount = Math.max(2, Math.min(24, n));
+            palettes.forEach(pal => {
+                resamplePaletteSteps(pal, sharedStepCount);
+                if (isAnchorMode(pal)) applyAnchorInterp(pal);
+                if (pal.lInterp) applyLInterp(pal);
+            });
+            render();
+        }
+
+        function updateStepCountLabels() {
+            document.querySelectorAll('.step-count').forEach(el => {
+                el.textContent = sharedStepCount;
+            });
+        }
+
+        function createPalette(n, baseHex, bgHex) {
+            return {
+                steps: Array.from({ length: Math.max(2, n) }, () => ({
+                    h: 0, s: 0, l: 50, hex: '#808080', pinned: false
+                })),
+                selected: null,
+                hexEditIndex: null,
+                baseHex: baseHex || DEFAULT_HEX,
+                bgHex: bgHex || DEFAULT_BG,
+                bgPreview: false,
+                hRamp: false,
+                sRamp: false,
+                lInterp: false
+            };
+        }
+
+        function useLPinHandles(pal) {
+            return isAnchorMode(pal) && getPinnedIndices(pal).length > 2;
+        }
+
+        function exitLInterp(pal) {
+            pal.lInterp = false;
+        }
+
+        function applyAnchorInterpL(pal) {
+            const anchors = getPinnedIndices(pal);
+            if (anchors.length < 2) return;
+            for (let a = 0; a < anchors.length - 1; a++) {
+                const i0 = anchors[a];
+                const i1 = anchors[a + 1];
+                const l0 = pal.steps[i0].l;
+                const l1 = pal.steps[i1].l;
+                for (let i = i0 + 1; i < i1; i++) {
+                    const t = (i - i0) / (i1 - i0);
+                    pal.steps[i].l = l0 + (l1 - l0) * t;
+                }
+            }
+            refreshStepHex(pal);
+        }
+
+        function applyLInterp(pal) {
+            if (isAnchorMode(pal)) applyAnchorInterpL(pal);
+            else applyPropRamp(pal, 'l');
+        }
+
+        function enterLInterp(block, pal) {
+            pal.lInterp = true;
+            const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
+            if (!wrap) return;
+            if (useLPinHandles(pal)) {
+                renderLPinMarkers(block, pal);
+            } else {
+                const minIn = wrap.querySelector('.ramp-min');
+                const maxIn = wrap.querySelector('.ramp-max');
+                const anchors = getPinnedIndices(pal);
+                if (isAnchorMode(pal) && anchors.length >= 2) {
+                    minIn.value = pal.steps[anchors[0]].l;
+                    maxIn.value = pal.steps[anchors[anchors.length - 1]].l;
+                } else {
+                    minIn.value = pal.steps[0].l;
+                    maxIn.value = pal.steps[pal.steps.length - 1].l;
+                }
+            }
+            applyLInterp(pal);
+            syncEditor(block, pal);
+            updateSwatches(block, pal);
+        }
+
+        function updateLPinValDisplay(block, pal) {
+            const anchors = getPinnedIndices(pal);
+            block.querySelector('.val-l').textContent =
+                anchors.map(i => pal.steps[i].l.toFixed(1)).join(' · ');
+        }
+
+        function renderLPinMarkers(block, pal) {
+            const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
+            const container = wrap?.querySelector('.l-pin-handles');
+            if (!container) return;
+            container.replaceChildren();
+            const anchors = getPinnedIndices(pal);
+            anchors.forEach((stepIdx, ai) => {
+                const hint = document.createElement('span');
+                hint.className = 'l-pin-hint-marker';
+                hint.dataset.anchorIdx = String(ai);
+                hint.textContent = String(ai + 1);
+                const thumb = document.createElement('span');
+                thumb.className = 'l-pin-thumb';
+                thumb.dataset.anchorIdx = String(ai);
+                container.append(hint, thumb);
+            });
+            container.dataset.pinKey = anchors.join(',');
+            updateLPinMarkerPositions(block, pal);
+        }
+
+        function updateLPinMarkerPositions(block, pal) {
+            const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
+            if (!wrap) return;
+            const anchors = getPinnedIndices(pal);
+            const trackW = wrap.getBoundingClientRect().width || 1;
+            anchors.forEach((stepIdx, ai) => {
+                const centerPct = valueToTrackPct(pal.steps[stepIdx].l, 0, 100, trackW);
+                const pct = centerPct + '%';
+                const hint = wrap.querySelector(`.l-pin-hint-marker[data-anchor-idx="${ai}"]`);
+                const thumb = wrap.querySelector(`.l-pin-thumb[data-anchor-idx="${ai}"]`);
+                if (hint) setHintLeftFromCenterPct(hint, wrap, centerPct);
+                if (thumb) thumb.style.left = pct;
+            });
+        }
+
+        function pickLPinHandle(wrap, pal, clientX) {
+            const anchors = getPinnedIndices(pal);
+            const rect = wrap.getBoundingClientRect();
+            if (!rect.width || anchors.length === 0) return -1;
+            const x = clientX - rect.left;
+            let best = 0;
+            let bestD = Infinity;
+            for (let a = 0; a < anchors.length; a++) {
+                const l = pal.steps[anchors[a]].l;
+                const cx = (valueToTrackPct(l, 0, 100, rect.width) / 100) * rect.width;
+                const d = Math.abs(x - cx);
+                if (d < bestD) {
+                    bestD = d;
+                    best = a;
+                }
+            }
+            return best;
+        }
+
+        function showLPinHints(wrap, anchorIdx) {
+            wrap.querySelectorAll('.l-pin-hint-marker').forEach(el => {
+                el.classList.toggle('visible', parseInt(el.dataset.anchorIdx, 10) === anchorIdx);
+            });
+        }
+
+        function hideLPinHints(wrap) {
+            wrap.querySelectorAll('.l-pin-hint-marker').forEach(el => el.classList.remove('visible'));
+        }
+
+        function onLPinSlider(block, pal, anchorIdx, raw) {
+            const anchors = getPinnedIndices(pal);
+            const stepIdx = anchors[anchorIdx];
+            if (stepIdx == null) return;
+            let v = parseFloat(raw);
+            v = Math.max(0, Math.min(100, v));
+            v = Math.round(v * 10) / 10;
+            pal.steps[stepIdx].l = v;
+            applyAnchorInterpL(pal);
+            updateLPinMarkerPositions(block, pal);
+            updateLPinValDisplay(block, pal);
+            updateSliderTrack(block, pal, 'l');
+            updateSwatches(block, pal);
+        }
+
+        function applyPropRamp(pal, prop) {
+            const n = pal.steps.length;
+            if (n < 2) return;
+            const start = pal.steps[0][prop];
+            const end = pal.steps[n - 1][prop];
+            for (let i = 0; i < n; i++) {
+                const t = i / (n - 1);
+                pal.steps[i][prop] = start + (end - start) * t;
+                pal.steps[i].hex = modelToHex(pal.steps[i].h, pal.steps[i].s, pal.steps[i].l) ?? pal.steps[i].hex;
+            }
+        }
+
+        function refreshStepHex(pal) {
+            pal.steps.forEach(step => {
+                step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
+            });
+        }
+
+        function countPinned(pal) {
+            return pal.steps.filter(s => s.pinned).length;
+        }
+
+        function isAnchorMode(pal) {
+            return countPinned(pal) >= 2;
+        }
+
+        function getPinnedIndices(pal) {
+            return pal.steps
+                .map((s, i) => (s.pinned ? i : -1))
+                .filter(i => i >= 0);
+        }
+
+        function applyAnchorInterp(pal) {
+            const anchors = getPinnedIndices(pal);
+            if (anchors.length < 2) return;
+            for (let a = 0; a < anchors.length - 1; a++) {
+                const i0 = anchors[a];
+                const i1 = anchors[a + 1];
+                const h0 = pal.steps[i0].h;
+                const h1 = pal.steps[i1].h;
+                const s0 = pal.steps[i0].s;
+                const s1 = pal.steps[i1].s;
+                for (let i = i0 + 1; i < i1; i++) {
+                    const t = (i - i0) / (i1 - i0);
+                    pal.steps[i].h = h0 + (h1 - h0) * t;
+                    pal.steps[i].s = s0 + (s1 - s0) * t;
+                }
+            }
+            refreshStepHex(pal);
+        }
+
+        function clearAllPins(pal) {
+            pal.steps.forEach(s => {
+                s.pinned = false;
+                delete s.pinT;
+            });
+        }
+
+        function canEditStepHex(pal, step) {
+            return !isAnchorMode(pal) || !!step.pinned;
+        }
+
+        function sanitizeHexInput(raw) {
+            return raw.replace(/#/g, '').replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
+        }
+
+        function applyStepFromHex(block, pal, index, raw) {
+            const step = pal.steps[index];
+            if (!step || !canEditStepHex(pal, step)) return false;
+            const norm = normalizeHex(sanitizeHexInput(raw));
+            if (!norm) return false;
+            const m = hexToModel(norm);
+            if (!m) return false;
+            step.h = m.h;
+            step.s = m.s;
+            step.l = m.l;
+            step.hex = modelToHex(m.h, m.s, m.l) ?? norm;
+            cancelHexEdit(pal);
+            setSelection(pal, index);
+            exitLInterp(pal);
+            if (isAnchorMode(pal)) applyAnchorInterp(pal);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
+            return true;
+        }
+
+        function cancelHexEdit(pal) {
+            pal.hexEditIndex = null;
+            delete pal.hexEditT;
+        }
+
+        function startHexEdit(block, pal, index) {
+            const step = pal.steps[index];
+            if (!step || !canEditStepHex(pal, step)) return;
+            const n = pal.steps.length;
+            pal.hexEditIndex = index;
+            pal.hexEditT = stepPinT(step, index, n);
+            setSelection(pal, index);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
+            requestAnimationFrame(() => {
+                const input = block.querySelector(`.swatch[data-step="${index}"] .hex-input`);
+                if (!input) return;
+                input.focus();
+                input.select();
+            });
+        }
+
+        function togglePin(block, pal, index) {
+            const n = pal.steps.length;
+            if (n < 2) return;
+            const step = pal.steps[index];
+            if (!step.pinned) {
+                step.pinned = true;
+                step.pinT = n > 1 ? index / (n - 1) : 0;
+                pal.steps[0].pinned = true;
+                pal.steps[0].pinT = 0;
+                pal.steps[n - 1].pinned = true;
+                pal.steps[n - 1].pinT = 1;
+                pal.hRamp = false;
+                pal.sRamp = false;
+            } else {
+                step.pinned = false;
+                delete step.pinT;
+                const left = countPinned(pal);
+                if (left === 1) clearAllPins(pal);
+            }
+            if (isAnchorMode(pal)) applyAnchorInterp(pal);
+            if (pal.lInterp) applyLInterp(pal);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
+        }
+
+        function findClosestStepIdx(steps, seed) {
+            let idx = 0;
+            let best = Infinity;
+            for (let i = 0; i < steps.length; i++) {
+                const d = Math.abs(steps[i].l - seed.l);
+                if (d < best) {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        function generatePalette(pal, selectClosest = false) {
+            const seed = hexToModel(pal.baseHex);
+            if (!seed) return;
+
+            const n = Math.max(2, pal.steps.length);
+            pal.steps.length = n;
+
+            pal.steps = Array.from({ length: n }, (_, i) => {
+                const l = n === 1 ? seed.l : L_START + (L_END - L_START) * (i / (n - 1));
+                const hex = modelToHex(seed.h, seed.s, l) ?? pal.baseHex;
+                return { h: seed.h, s: seed.s, l, hex, pinned: false };
+            });
+
+            pal.hRamp = false;
+            pal.sRamp = false;
+            pal.lInterp = false;
+            pal.hexEditIndex = null;
+            clearAllPins(pal);
+
+            if (selectClosest) {
+                setSelection(pal, findClosestStepIdx(pal.steps, seed));
+            } else if (pal.selected != null) {
+                setSelection(pal, Math.min(pal.selected, n - 1));
+            }
+        }
+
+        function addPalette() {
+            const ref = palettes[palettes.length - 1];
+            const pal = createPalette(
+                sharedStepCount,
+                ref?.baseHex ?? DEFAULT_HEX,
+                ref?.bgHex ?? DEFAULT_BG
+            );
+            generatePalette(pal);
+            palettes.push(pal);
+            render();
+        }
+
+        let iconMaskId = 0;
+
+        function maskedIconSvg(pathD) {
+            const maskId = `icon-mask-${++iconMaskId}`;
+            const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            s.setAttribute('viewBox', '0 0 24 24');
+            s.setAttribute('fill', 'none');
+            s.innerHTML = `
+                <mask id="${maskId}" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+                    <rect width="24" height="24" fill="#D9D9D9"/>
+                </mask>
+                <g mask="url(#${maskId})">
+                    <path d="${pathD}" fill="currentColor"/>
+                </g>
+            `;
+            return s;
+        }
+
+        function eyeSvg() {
+            return maskedIconSvg(
+                'M15.1875 14.6875C16.0625 13.8125 16.5 12.75 16.5 11.5C16.5 10.25 16.0625 9.1875 15.1875 8.3125C14.3125 7.4375 13.25 7 12 7C10.75 7 9.6875 7.4375 8.8125 8.3125C7.9375 9.1875 7.5 10.25 7.5 11.5C7.5 12.75 7.9375 13.8125 8.8125 14.6875C9.6875 15.5625 10.75 16 12 16C13.25 16 14.3125 15.5625 15.1875 14.6875ZM10.0875 13.4125C9.5625 12.8875 9.3 12.25 9.3 11.5C9.3 10.75 9.5625 10.1125 10.0875 9.5875C10.6125 9.0625 11.25 8.8 12 8.8C12.75 8.8 13.3875 9.0625 13.9125 9.5875C14.4375 10.1125 14.7 10.75 14.7 11.5C14.7 12.25 14.4375 12.8875 13.9125 13.4125C13.3875 13.9375 12.75 14.2 12 14.2C11.25 14.2 10.6125 13.9375 10.0875 13.4125ZM5.35 16.9625C3.35 15.6042 1.9 13.7833 1 11.5C1.9 9.21667 3.35 7.39583 5.35 6.0375C7.35 4.67917 9.56667 4 12 4C14.4333 4 16.65 4.67917 18.65 6.0375C20.65 7.39583 22.1 9.21667 23 11.5C22.1 13.7833 20.65 15.6042 18.65 16.9625C16.65 18.3208 14.4333 19 12 19C9.56667 19 7.35 18.3208 5.35 16.9625Z'
+            );
+        }
+
+        function pinSvg() {
+            return maskedIconSvg(
+                'M16 12L18 14V16H13V22L12 23L11 22V16H6V14L8 12V5H7V3H17V5H16V12Z'
+            );
+        }
+
+        function editSvg() {
+            return maskedIconSvg(
+                'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'
+            );
+        }
+
+        function updatePinButton(pinBtn, pinned) {
+            pinBtn.classList.toggle('active', pinned);
+            pinBtn.title = pinned ? 'Odepnout' : 'Připnout';
+        }
+
+        let hexRowResizeObserver = null;
+        function getHexRowResizeObserver() {
+            if (!hexRowResizeObserver && typeof ResizeObserver !== 'undefined') {
+                hexRowResizeObserver = new ResizeObserver((entries) => {
+                    for (const { target } of entries) updateHexRowLayout(target);
+                });
+            }
+            return hexRowResizeObserver;
+        }
+
+        function updateHexRowLayout(hexRow) {
+            const hex = hexRow.querySelector('.hex');
+            const edit = hexRow.querySelector('.swatch-hex-edit');
+            if (!hex || !edit) {
+                hexRow.classList.remove('hex-stacked');
+                return;
+            }
+            hexRow.classList.remove('hex-stacked');
+            const rowW = hexRow.clientWidth;
+            if (rowW < 1) return;
+            const gap = parseFloat(getComputedStyle(hexRow).columnGap || getComputedStyle(hexRow).gap) || 0;
+            if (hex.scrollWidth + edit.offsetWidth + gap > rowW + 0.5) {
+                hexRow.classList.add('hex-stacked');
+            }
+        }
+
+        function layoutHexRows(block) {
+            const ro = getHexRowResizeObserver();
+            block.querySelectorAll('.swatch-hex-row').forEach(row => {
+                updateHexRowLayout(row);
+                ro?.observe(row);
+            });
+        }
+
+        function applyBgPreview(block, pal) {
+            const wrap = block.querySelector('.palette-preview');
+            if (!wrap) return;
+            wrap.style.backgroundColor = pal.bgPreview && hexToRgb(pal.bgHex) ? pal.bgHex : '';
+        }
+
+        function updateSwatches(block, pal) {
+            const row = block.querySelector('.palette-row');
+            row.replaceChildren();
+            pal.steps.forEach((step, si) => {
+                const el = document.createElement('div');
+                el.className = `swatch ${isLightHex(step.hex) ? 'light' : 'dark'}${pal.selected === si ? ' selected' : ''}`;
+                el.dataset.step = String(si);
+                el.style.background = step.hex;
+
+                const head = document.createElement('div');
+                head.className = 'swatch-head';
+
+                const nameEl = document.createElement('span');
+                nameEl.className = 'swatch-name';
+                nameEl.textContent = stepScaleName(si);
+
+                const pinBtn = document.createElement('button');
+                pinBtn.type = 'button';
+                pinBtn.className = 'swatch-pin';
+                pinBtn.appendChild(pinSvg());
+                updatePinButton(pinBtn, !!step.pinned);
+                pinBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    togglePin(block, pal, si);
+                };
+                head.append(nameEl, pinBtn);
+
+                const hexRow = document.createElement('div');
+                hexRow.className = 'swatch-hex-row';
+                const canEditHex = canEditStepHex(pal, step);
+                const isEditing = pal.hexEditIndex === si;
+
+                if (isEditing) {
+                    const hexInput = document.createElement('input');
+                    hexInput.type = 'text';
+                    hexInput.className = 'hex-input';
+                    hexInput.value = step.hex.replace(/^#/, '');
+                    hexInput.spellcheck = false;
+                    hexInput.autocomplete = 'off';
+                    hexInput.oninput = () => {
+                        hexInput.value = sanitizeHexInput(hexInput.value);
+                    };
+                    const commit = () => {
+                        const raw = sanitizeHexInput(hexInput.value);
+                        if (raw.length < 6) {
+                            cancelHexEdit(pal);
+                            updateSwatches(block, pal);
+                            syncEditor(block, pal);
+                            return;
+                        }
+                        if (!applyStepFromHex(block, pal, si, raw)) {
+                            hexInput.classList.add('error');
+                            setTimeout(() => hexInput.classList.remove('error'), 600);
+                        }
+                    };
+                    hexInput.onkeydown = (e) => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter') { e.preventDefault(); commit(); }
+                        if (e.key === 'Escape') {
+                            e.preventDefault();
+                            cancelHexEdit(pal);
+                            updateSwatches(block, pal);
+                            syncEditor(block, pal);
+                        }
+                    };
+                    hexInput.onblur = () => {
+                        requestAnimationFrame(() => {
+                            if (pal.hexEditIndex !== si) return;
+                            commit();
+                        });
+                    };
+                    hexInput.onclick = (e) => e.stopPropagation();
+                    hexRow.appendChild(hexInput);
+                } else {
+                    const hexEl = document.createElement('span');
+                    hexEl.className = 'hex';
+                    hexEl.textContent = step.hex;
+                    hexEl.title = 'Klikni pro kopírování';
+                    hexEl.onclick = (e) => { e.stopPropagation(); copyHex(hexEl, step.hex); };
+                    hexRow.appendChild(hexEl);
+
+                    const editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'swatch-hex-edit';
+                    editBtn.title = canEditHex
+                        ? 'Upravit hex'
+                        : 'V kotvovém režimu lze upravit jen připnuté kroky';
+                    editBtn.disabled = !canEditHex;
+                    editBtn.appendChild(editSvg());
+                    editBtn.onmousedown = (e) => e.preventDefault();
+                    editBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        startHexEdit(block, pal, si);
+                    };
+                    hexRow.appendChild(editBtn);
+                }
+
+                const center = document.createElement('div');
+                center.className = 'swatch-hex-center';
+                center.appendChild(hexRow);
+
+                const apca = getApcaContrast(step.hex, pal.bgHex);
+                const wcag = calcWcagRatio(step.hex, pal.bgHex);
+                const contrasts = document.createElement('div');
+                contrasts.className = 'swatch-contrasts';
+                const apcaEl = document.createElement('span');
+                apcaEl.className = 'contrast-line';
+                apcaEl.textContent = apca === null ? '—' : `APCA ${apca.toFixed(1)}`;
+                const wcagEl = document.createElement('span');
+                wcagEl.className = 'contrast-line';
+                wcagEl.textContent = wcag === null ? '—' : `WCAG ${wcag.toFixed(2)}:1`;
+                contrasts.append(apcaEl, wcagEl);
+
+                el.append(head, center, contrasts);
+
+                el.onclick = () => {
+                    setSelection(pal, si);
+                    syncEditor(block, pal);
+                    updateSwatches(block, pal);
+                };
+                row.appendChild(el);
+            });
+            requestAnimationFrame(() => layoutHexRows(block));
+            updateStepCountLabels();
+        }
+
+        function rampRange(prop) {
+            return prop === 'h' ? { min: 0, max: 360 } : { min: 0, max: 100 };
+        }
+
+        const RAMP_THUMB_PX = 14;
+
+        function valueToTrackPct(value, min, max, trackWidth) {
+            const span = max - min || 1;
+            const t = (value - min) / span;
+            const w = Math.max(1, trackWidth);
+            const usable = Math.max(0, w - RAMP_THUMB_PX);
+            return ((RAMP_THUMB_PX / 2 + t * usable) / w) * 100;
+        }
+
+        const HINT_EDGE_PAD = 0;
+
+        function measureHintWidth(hint) {
+            if (hint.offsetWidth > 0) return hint.offsetWidth;
+            const prevVis = hint.style.visibility;
+            const prevOp = hint.style.opacity;
+            hint.style.visibility = 'hidden';
+            hint.style.opacity = '1';
+            const w = hint.offsetWidth;
+            hint.style.visibility = prevVis;
+            hint.style.opacity = prevOp;
+            return w || 32;
+        }
+
+        /** Center hint on handle %, but clamp inside slider frame (translateX -50%). */
+        function setHintLeftFromCenterPct(hint, wrap, centerPct) {
+            const trackW = wrap.getBoundingClientRect().width || 1;
+            const half = measureHintWidth(hint) / 2 + HINT_EDGE_PAD;
+            let cx = (centerPct / 100) * trackW;
+            cx = Math.max(half, Math.min(trackW - half, cx));
+            hint.style.left = cx + 'px';
+            hint.style.transform = 'translateX(-50%)';
+        }
+
+        function rampSliderValues(pal, prop) {
+            const n = pal.steps.length;
+            if (n < 2) return { start: 0, end: 0 };
+            return { start: pal.steps[0][prop], end: pal.steps[n - 1][prop] };
+        }
+
+        function valueFromPointer(wrap, prop, clientX) {
+            const { min, max } = rampRange(prop);
+            const rect = wrap.getBoundingClientRect();
+            const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+            let v = min + pct * (max - min);
+            if (prop === 'h') v = Math.round(v);
+            else v = Math.round(v * 10) / 10;
+            return v;
+        }
+
+        function pickRampHandle(wrap, prop, clientX) {
+            const { min, max } = rampRange(prop);
+            const rect = wrap.getBoundingClientRect();
+            if (!rect.width) return 'min';
+            const x = clientX - rect.left;
+            const loVal = parseFloat(wrap.querySelector('.ramp-min').value);
+            const hiVal = parseFloat(wrap.querySelector('.ramp-max').value);
+            const loX = (valueToTrackPct(loVal, min, max, rect.width) / 100) * rect.width;
+            const hiX = (valueToTrackPct(hiVal, min, max, rect.width) / 100) * rect.width;
+            return Math.abs(x - loX) <= Math.abs(x - hiX) ? 'min' : 'max';
+        }
+
+        function hideRampHints(wrap) {
+            if (!wrap) return;
+            wrap.querySelector('.ramp-hint-min')?.classList.remove('visible');
+            wrap.querySelector('.ramp-hint-max')?.classList.remove('visible');
+        }
+
+        function updateRampHints(block, pal, prop) {
+            const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
+            if (!wrap?.classList.contains('ramp-mode')) return;
+            const { min, max } = rampRange(prop);
+            const trackW = wrap.getBoundingClientRect().width || 1;
+            const lo = parseFloat(wrap.querySelector('.ramp-min').value);
+            const hi = parseFloat(wrap.querySelector('.ramp-max').value);
+            const hintMin = wrap.querySelector('.ramp-hint-min');
+            const hintMax = wrap.querySelector('.ramp-hint-max');
+            if (!hintMin || !hintMax) return;
+            hintMin.textContent = 'Začátek';
+            hintMax.textContent = 'Konec';
+            setHintLeftFromCenterPct(hintMin, wrap, valueToTrackPct(lo, min, max, trackW));
+            setHintLeftFromCenterPct(hintMax, wrap, valueToTrackPct(hi, min, max, trackW));
+        }
+
+        function sliderTrackWidth(wrap) {
+            return wrap.getBoundingClientRect().width;
+        }
+
+        function refreshPaletteSliderTracks(block, pal) {
+            ['h', 's', 'l'].forEach(prop => updateSliderTrack(block, pal, prop));
+            const lWrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
+            if (lWrap?.classList.contains('l-pin-ramp-mode')) {
+                updateLPinMarkerPositions(block, pal);
+            }
+        }
+
+        let sliderTrackRefreshRaf = 0;
+        function scheduleSliderTrackRefresh() {
+            cancelAnimationFrame(sliderTrackRefreshRaf);
+            sliderTrackRefreshRaf = requestAnimationFrame(() => {
+                sliderTrackRefreshRaf = requestAnimationFrame(() => {
+                    sliderTrackRefreshRaf = 0;
+                    document.querySelectorAll('.palette-block').forEach(block => {
+                        const pi = parseInt(block.dataset.paletteIndex, 10);
+                        const pal = palettes[pi];
+                        if (pal) refreshPaletteSliderTracks(block, pal);
+                    });
+                });
+            });
+        }
+
+        let sliderTrackResizeObserver = null;
+        function getSliderTrackResizeObserver() {
+            if (!sliderTrackResizeObserver && typeof ResizeObserver !== 'undefined') {
+                sliderTrackResizeObserver = new ResizeObserver(entries => {
+                    for (const entry of entries) {
+                        const wrap = entry.target;
+                        const block = wrap.closest('.palette-block');
+                        const pi = parseInt(block?.dataset.paletteIndex, 10);
+                        const pal = palettes[pi];
+                        const prop = wrap.dataset.prop;
+                        if (!block || !pal || !prop) continue;
+                        updateSliderTrack(block, pal, prop);
+                        if (prop === 'l' && wrap.classList.contains('l-pin-ramp-mode')) {
+                            updateLPinMarkerPositions(block, pal);
+                        }
+                    }
+                });
+            }
+            return sliderTrackResizeObserver;
+        }
+
+        function observeSliderTracks(block) {
+            const ro = getSliderTrackResizeObserver();
+            if (!ro) return;
+            block.querySelectorAll('.slider-ramp-wrap').forEach(wrap => ro.observe(wrap));
+        }
+
+        function updateSliderTrack(block, pal, prop) {
+            const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
+            if (!wrap) return;
+            const { min, max } = rampRange(prop);
+            const span = max - min || 1;
+            const fill = wrap.querySelector('.track-fill');
+            if (wrap.classList.contains('slider-inactive')) {
+                hideRampHints(wrap);
+                return;
+            }
+            if (prop === 'l' && wrap.classList.contains('l-pin-ramp-mode')) {
+                hideRampHints(wrap);
+                const anchors = getPinnedIndices(pal);
+                const trackW = sliderTrackWidth(wrap);
+                if (trackW < 1) return;
+                if (anchors.length >= 2) {
+                    const l0 = pal.steps[anchors[0]].l;
+                    const lN = pal.steps[anchors[anchors.length - 1]].l;
+                    const p0 = valueToTrackPct(l0, 0, 100, trackW);
+                    const pN = valueToTrackPct(lN, 0, 100, trackW);
+                    fill.style.left = Math.min(p0, pN) + '%';
+                    fill.style.width = Math.abs(pN - p0) + '%';
+                } else {
+                    fill.style.left = '0%';
+                    fill.style.width = '0%';
+                }
+                return;
+            }
+            if (wrap.classList.contains('ramp-mode')) {
+                const lo = parseFloat(wrap.querySelector('.ramp-min').value);
+                const hi = parseFloat(wrap.querySelector('.ramp-max').value);
+                const fillLo = Math.min(lo, hi);
+                const fillHi = Math.max(lo, hi);
+                const trackW = sliderTrackWidth(wrap);
+                if (trackW < 1) return;
+                const pLo = valueToTrackPct(fillLo, min, max, trackW);
+                const pHi = valueToTrackPct(fillHi, min, max, trackW);
+                fill.style.left = Math.min(pLo, pHi) + '%';
+                fill.style.width = Math.abs(pHi - pLo) + '%';
+                updateRampHints(block, pal, prop);
+            } else {
+                hideRampHints(wrap);
+                const v = parseFloat(wrap.querySelector('.ramp-single').value);
+                fill.style.left = '0%';
+                fill.style.width = Math.max(0, ((v - min) / span) * 100) + '%';
+            }
+        }
+
+        function updateSliderMode(block, pal) {
+            const whole = pal.selected === null;
+            const anchorMode = isAnchorMode(pal);
+            if (anchorMode) {
+                pal.hRamp = false;
+                pal.sRamp = false;
+            }
+            ['h', 's'].forEach(prop => {
+                const ramp = prop === 'h' ? pal.hRamp : pal.sRamp;
+                const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
+                const on = whole && ramp && !anchorMode;
+                wrap.classList.toggle('ramp-mode', on);
+                if (!on) hideRampHints(wrap);
+                updateSliderTrack(block, pal, prop);
+            });
+            const lWrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
+            if (lWrap) {
+                const pinHandles = useLPinHandles(pal);
+                const rampOn = whole && pal.lInterp && !pinHandles;
+                const pinOn = whole && pal.lInterp && pinHandles;
+                lWrap.classList.toggle('ramp-mode', rampOn);
+                lWrap.classList.toggle('l-pin-ramp-mode', pinOn);
+                if (!rampOn) hideRampHints(lWrap);
+                if (!pinOn) hideLPinHints(lWrap);
+                if (pinOn) {
+                    const anchors = getPinnedIndices(pal);
+                    const pinKey = anchors.join(',');
+                    const pinContainer = lWrap.querySelector('.l-pin-handles');
+                    if (pinContainer?.dataset.pinKey !== pinKey) {
+                        renderLPinMarkers(block, pal);
+                    } else {
+                        updateLPinMarkerPositions(block, pal);
+                    }
+                }
+                updateSliderTrack(block, pal, 'l');
+            }
+        }
+
+        function updateSliderInactive(block, pal) {
+            const whole = pal.selected === null;
+            const anchorMode = isAnchorMode(pal);
+            const sel = pal.selected;
+            const step = sel != null ? pal.steps[sel] : null;
+            const hsInactive = anchorMode && (sel === null || !step?.pinned);
+            const lInactive = whole && !pal.lInterp;
+
+            ['h', 's', 'l'].forEach(prop => {
+                const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
+                if (!wrap) return;
+                const inactive = prop === 'l' ? lInactive : hsInactive;
+                wrap.classList.toggle('slider-inactive', inactive);
+            });
+            const inputH = block.querySelector('.input-h');
+            const inputS = block.querySelector('.input-s');
+            const inputL = block.querySelector('.input-l');
+            if (inputH) inputH.disabled = hsInactive;
+            if (inputS) inputS.disabled = hsInactive;
+            if (inputL) inputL.disabled = lInactive;
+            block.querySelector('.label-l')?.classList.toggle('l-await-interp', lInactive);
+        }
+
+        function updateEditorSliderClasses(block, pal) {
+            const editor = block.querySelector('.palette-editor');
+            if (!editor) return;
+            const anchorMode = isAnchorMode(pal);
+            const sel = pal.selected;
+            const step = sel != null ? pal.steps[sel] : null;
+            const canEditHS = sel != null && (!anchorMode || !!step?.pinned);
+            editor.classList.toggle('anchor-mode', anchorMode);
+            editor.classList.toggle('accent-hs', canEditHS);
+            editor.classList.toggle('accent-l', sel != null);
+        }
+
+        function syncEditor(block, pal) {
+            const inputL = block.querySelector('.input-l');
+
+            updateSliderMode(block, pal);
+            updateEditorSliderClasses(block, pal);
+            updateSliderInactive(block, pal);
+
+            if (pal.selected === null) {
+                const ref = pal.steps[0];
+                if (!ref) return;
+                inputL.value = ref.l;
+
+                if (pal.lInterp) {
+                    if (useLPinHandles(pal)) {
+                        const anchors = getPinnedIndices(pal);
+                        const vals = anchors.map(i => pal.steps[i].l);
+                        block.querySelector('.val-l').textContent =
+                            vals.map(v => v.toFixed(1)).join(' · ');
+                    } else {
+                        const { start, end } = rampSliderValues(pal, 'l');
+                        const lWrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
+                        lWrap.querySelector('.ramp-min').value = start;
+                        lWrap.querySelector('.ramp-max').value = end;
+                        block.querySelector('.val-l').textContent =
+                            `${start.toFixed(1)} – ${end.toFixed(1)}`;
+                    }
+                } else {
+                    block.querySelector('.val-l').textContent = ref.l.toFixed(1);
+                }
+                updateSliderTrack(block, pal, 'l');
+
+                if (pal.hRamp) {
+                    const { start, end } = rampSliderValues(pal, 'h');
+                    const wrap = block.querySelector('.slider-ramp-wrap[data-prop="h"]');
+                    wrap.querySelector('.ramp-min').value = start;
+                    wrap.querySelector('.ramp-max').value = end;
+                    block.querySelector('.val-h').textContent =
+                        `${Math.round(start)}° – ${Math.round(end)}°`;
+                    updateSliderTrack(block, pal, 'h');
+                } else {
+                    block.querySelector('.input-h').value = ref.h;
+                    block.querySelector('.val-h').textContent = Math.round(ref.h) + '°';
+                    updateSliderTrack(block, pal, 'h');
+                }
+
+                if (pal.sRamp) {
+                    const { start, end } = rampSliderValues(pal, 's');
+                    const wrap = block.querySelector('.slider-ramp-wrap[data-prop="s"]');
+                    wrap.querySelector('.ramp-min').value = start;
+                    wrap.querySelector('.ramp-max').value = end;
+                    block.querySelector('.val-s').textContent =
+                        `${start.toFixed(1)} – ${end.toFixed(1)}`;
+                    updateSliderTrack(block, pal, 's');
+                } else {
+                    block.querySelector('.input-s').value = ref.s;
+                    block.querySelector('.val-s').textContent = ref.s.toFixed(1);
+                    updateSliderTrack(block, pal, 's');
+                }
+                return;
+            }
+
+            const step = pal.steps[pal.selected];
+            if (!step) return;
+            block.querySelector('.input-h').value = step.h;
+            block.querySelector('.input-s').value = step.s;
+            inputL.value = step.l;
+            block.querySelector('.val-h').textContent = Math.round(step.h) + '°';
+            block.querySelector('.val-s').textContent = step.s.toFixed(1);
+            block.querySelector('.val-l').textContent = step.l.toFixed(1);
+            updateSliderTrack(block, pal, 'h');
+            updateSliderTrack(block, pal, 's');
+            updateSliderTrack(block, pal, 'l');
+        }
+
+        function toggleRamp(block, pal, prop) {
+            if (isAnchorMode(pal) || pal.selected !== null) return;
+            const key = prop === 'h' ? 'hRamp' : 'sRamp';
+            pal[key] = !pal[key];
+            if (pal[key]) {
+                setSelection(pal, null);
+                applyPropRamp(pal, prop);
+            } else {
+                hideRampHints(block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`));
+            }
+            syncEditor(block, pal);
+            updateSwatches(block, pal);
+        }
+
+        function onRampSlider(block, pal, prop, which, raw) {
+            const n = pal.steps.length;
+            if (n < 2) return;
+            const { min: rMin, max: rMax } = rampRange(prop);
+            let v = parseFloat(raw);
+            if (prop === 'h') v = Math.max(0, Math.min(360, v));
+            else v = Math.max(rMin, Math.min(rMax, v));
+
+            const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
+            const minIn = wrap.querySelector('.ramp-min');
+            const maxIn = wrap.querySelector('.ramp-max');
+
+            if (prop === 'l') {
+                if (!pal.lInterp) return;
+                const anchors = getPinnedIndices(pal);
+                if (isAnchorMode(pal) && anchors.length >= 2) {
+                    if (which === 'min') pal.steps[anchors[0]].l = v;
+                    else pal.steps[anchors[anchors.length - 1]].l = v;
+                    minIn.value = pal.steps[anchors[0]].l;
+                    maxIn.value = pal.steps[anchors[anchors.length - 1]].l;
+                    applyAnchorInterpL(pal);
+                } else {
+                    if (which === 'min') pal.steps[0].l = v;
+                    else pal.steps[n - 1].l = v;
+                    minIn.value = pal.steps[0].l;
+                    maxIn.value = pal.steps[n - 1].l;
+                    applyPropRamp(pal, 'l');
+                }
+            } else {
+                if (isAnchorMode(pal)) return;
+                if (which === 'min') pal.steps[0][prop] = v;
+                else pal.steps[n - 1][prop] = v;
+                minIn.value = pal.steps[0][prop];
+                maxIn.value = pal.steps[n - 1][prop];
+                applyPropRamp(pal, prop);
+            }
+            syncEditor(block, pal);
+            updateSwatches(block, pal);
+        }
+
+        function deselectPalette(block, pal) {
+            const hadSel = pal.selected !== null;
+            const hadEdit = pal.hexEditIndex != null;
+            if (!hadSel && !hadEdit) return;
+            cancelHexEdit(pal);
+            setSelection(pal, null);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
+        }
+
+        function onSlider(block, pal, prop, raw) {
+            const v = parseFloat(raw);
+            const anchorMode = isAnchorMode(pal);
+            if (pal.selected === null) {
+                if (prop === 'l') return;
+                if (anchorMode) return;
+                if ((prop === 'h' && pal.hRamp) || (prop === 's' && pal.sRamp)) return;
+                pal.steps.forEach(step => { step[prop] = v; });
+                refreshStepHex(pal);
+            } else {
+                const step = pal.steps[pal.selected];
+                if (prop === 'l') {
+                    exitLInterp(pal);
+                    step.l = v;
+                    step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
+                } else if (anchorMode) {
+                    if (!step.pinned) return;
+                    step[prop] = v;
+                    applyAnchorInterp(pal);
+                } else {
+                    step[prop] = v;
+                    step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
+                }
+            }
+            syncEditor(block, pal);
+            updateSwatches(block, pal);
+        }
+
+        function buildPaletteBlock(pal, pi) {
+            const block = document.createElement('div');
+            block.className = 'palette-block';
+            block.dataset.paletteIndex = String(pi);
+
+            const toolbar = document.createElement('div');
+            toolbar.className = 'palette-toolbar';
+
+            const paletteField = document.createElement('label');
+            paletteField.className = 'toolbar-field';
+            paletteField.textContent = 'Barva palety';
+            const hexInput = document.createElement('input');
+            hexInput.type = 'text';
+            hexInput.placeholder = '#RRGGBB';
+            hexInput.value = pal.baseHex;
+            paletteField.appendChild(hexInput);
+
+            const bgField = document.createElement('label');
+            bgField.className = 'toolbar-field';
+            bgField.append('Barva pozadí');
+            const bgWrap = document.createElement('div');
+            bgWrap.className = 'input-with-eye';
+            const bgInput = document.createElement('input');
+            bgInput.type = 'text';
+            bgInput.placeholder = '#RRGGBB';
+            bgInput.value = pal.bgHex;
+            const bgEye = document.createElement('button');
+            bgEye.type = 'button';
+            bgEye.className = 'bg-eye' + (pal.bgPreview ? ' active' : '');
+            bgEye.title = 'Náhled pozadí';
+            bgEye.appendChild(eyeSvg());
+            bgEye.onclick = () => {
+                pal.bgPreview = !pal.bgPreview;
+                bgEye.classList.toggle('active', pal.bgPreview);
+                applyBgPreview(block, pal);
+            };
+            bgWrap.append(bgInput, bgEye);
+            bgField.appendChild(bgWrap);
+
+            const generateBtn = document.createElement('button');
+            generateBtn.type = 'button';
+            generateBtn.textContent = 'Generovat paletu';
+
+            generateBtn.onclick = () => {
+                pal.baseHex = hexInput.value.trim();
+                pal.bgHex = bgInput.value.trim();
+                if (!hexToModel(pal.baseHex)) {
+                    hexInput.classList.add('error');
+                    setTimeout(() => hexInput.classList.remove('error'), 600);
+                    return;
+                }
+                if (!hexToRgb(pal.bgHex)) {
+                    bgInput.classList.add('error');
+                    setTimeout(() => bgInput.classList.remove('error'), 600);
+                    return;
+                }
+                hexInput.classList.remove('error');
+                bgInput.classList.remove('error');
+                generatePalette(pal, true);
+                updateSwatches(block, pal);
+                syncEditor(block, pal);
+                applyBgPreview(block, pal);
+            };
+
+            hexInput.onkeydown = e => { if (e.key === 'Enter') generateBtn.click(); };
+            bgInput.oninput = () => {
+                pal.bgHex = bgInput.value.trim();
+                applyBgPreview(block, pal);
+                if (hexToRgb(pal.bgHex)) updateSwatches(block, pal);
+            };
+
+            toolbar.append(paletteField, bgField, generateBtn);
+            if (pi === 0) {
+                const toolbarSpacer = document.createElement('div');
+                toolbarSpacer.className = 'toolbar-spacer';
+                toolbar.append(toolbarSpacer, buildColorSpaceToggle());
+            }
+
+            const main = document.createElement('div');
+            main.className = 'palette-main';
+            const preview = document.createElement('div');
+            preview.className = 'palette-preview';
+            const row = document.createElement('div');
+            row.className = 'palette-row';
+            const ctrl = document.createElement('div');
+            ctrl.className = 'steps-ctrl';
+            const stepsGrow = document.createElement('div');
+            stepsGrow.className = 'steps-grow';
+
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.className = 'ghost fill-v';
+            addBtn.title = 'Přidat krok';
+            addBtn.textContent = '+';
+            addBtn.onclick = () => {
+                if (sharedStepCount >= 24) return;
+                setSharedStepCount(sharedStepCount + 1);
+            };
+
+            const count = document.createElement('span');
+            count.className = 'step-count';
+            count.textContent = sharedStepCount;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'ghost fill-v';
+            removeBtn.title = 'Odebrat krok';
+            removeBtn.textContent = '−';
+            removeBtn.onclick = () => {
+                if (sharedStepCount <= 2) return;
+                setSharedStepCount(sharedStepCount - 1);
+            };
+
+            stepsGrow.append(addBtn, count, removeBtn);
+
+            const addPalBtn = document.createElement('button');
+            addPalBtn.type = 'button';
+            addPalBtn.className = 'ghost';
+            addPalBtn.textContent = '+';
+            addPalBtn.title = 'Přidat paletu';
+            addPalBtn.onclick = addPalette;
+
+            if (pi > 0) {
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'ghost danger';
+                delBtn.textContent = '−';
+                delBtn.title = 'Smazat paletu';
+                delBtn.onclick = () => { palettes.splice(pi, 1); render(); };
+                ctrl.append(delBtn, stepsGrow, addPalBtn);
+            } else {
+                ctrl.append(stepsGrow, addPalBtn);
+            }
+
+            preview.appendChild(row);
+            main.append(preview, ctrl);
+
+            const editor = document.createElement('div');
+            editor.className = 'palette-editor';
+            editor.innerHTML = `
+                <div class="sliders">
+                    <label>
+                        <span class="slider-top"><span class="slider-axis slider-axis-h">Hue</span><span class="val val-h">0°</span></span>
+                        <div class="slider-ramp-wrap" data-prop="h" title="Alt+klik: rampa začátek–konec">
+                            <span class="ramp-hint ramp-hint-min"></span>
+                            <span class="ramp-hint ramp-hint-max"></span>
+                            <div class="track-bg"></div>
+                            <div class="track-fill"></div>
+                            <input type="range" class="input-h ramp-single" min="0" max="360" step="1">
+                            <input type="range" class="ramp-min ramp-handle" min="0" max="360" step="1">
+                            <input type="range" class="ramp-max ramp-handle" min="0" max="360" step="1">
+                        </div>
+                    </label>
+                    <label>
+                        <span class="slider-top"><span class="slider-axis slider-axis-s">Saturation</span><span class="val val-s">0</span></span>
+                        <div class="slider-ramp-wrap" data-prop="s" title="Alt+klik: rampa začátek–konec">
+                            <span class="ramp-hint ramp-hint-min"></span>
+                            <span class="ramp-hint ramp-hint-max"></span>
+                            <div class="track-bg"></div>
+                            <div class="track-fill"></div>
+                            <input type="range" class="input-s ramp-single" min="0" max="100" step="0.1">
+                            <input type="range" class="ramp-min ramp-handle" min="0" max="100" step="0.1">
+                            <input type="range" class="ramp-max ramp-handle" min="0" max="100" step="0.1">
+                        </div>
+                    </label>
+                    <div class="label-l">
+                        <span class="slider-top"><span class="slider-axis slider-axis-l">Lightness</span><span class="val val-l">0</span></span>
+                        <div class="l-slider-stack">
+                            <button type="button" class="l-interpolate-cta">Interpolovat</button>
+                            <div class="slider-ramp-wrap" data-prop="l">
+                                <span class="ramp-hint ramp-hint-min"></span>
+                                <span class="ramp-hint ramp-hint-max"></span>
+                                <div class="l-pin-handles"></div>
+                                <div class="track-bg"></div>
+                                <div class="track-fill"></div>
+                                <input type="range" class="input-l ramp-single" min="0" max="100" step="0.1">
+                                <input type="range" class="ramp-min ramp-handle" min="0" max="100" step="0.1">
+                                <input type="range" class="ramp-max ramp-handle" min="0" max="100" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            editor.querySelector('.l-interpolate-cta').addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                enterLInterp(block, pal);
+            });
+
+            editor.querySelectorAll('.slider-ramp-wrap').forEach(wrap => {
+                const prop = wrap.dataset.prop;
+                let altClick = false;
+                let dragMoved = false;
+                let rampDrag = null;
+                let lPinDrag = null;
+                const hintMin = wrap.querySelector('.ramp-hint-min');
+                const hintMax = wrap.querySelector('.ramp-hint-max');
+
+                const showRampHint = (which) => {
+                    if (!hintMin || !hintMax) return;
+                    hintMin.classList.toggle('visible', which === 'min');
+                    hintMax.classList.toggle('visible', which === 'max');
+                };
+
+                wrap.addEventListener('pointerdown', (e) => {
+                    if (e.target.closest('.l-interpolate-cta')) return;
+                    altClick = e.altKey;
+                    dragMoved = false;
+                    if (e.altKey) return;
+
+                    if (prop === 'l' && wrap.classList.contains('slider-inactive')) return;
+
+                    if (prop === 'l' && wrap.classList.contains('l-pin-ramp-mode')) {
+                        lPinDrag = pickLPinHandle(wrap, pal, e.clientX);
+                        if (lPinDrag < 0) return;
+                        e.preventDefault();
+                        dragMoved = true;
+                        wrap.setPointerCapture(e.pointerId);
+                        showLPinHints(wrap, lPinDrag);
+                        onLPinSlider(block, pal, lPinDrag, String(valueFromPointer(wrap, prop, e.clientX)));
+                        return;
+                    }
+
+                    if (wrap.classList.contains('ramp-mode')) {
+                        if (prop === 'l' && !pal.lInterp) return;
+                        e.preventDefault();
+                        rampDrag = pickRampHandle(wrap, prop, e.clientX);
+                        dragMoved = true;
+                        wrap.setPointerCapture(e.pointerId);
+                        onRampSlider(block, pal, prop, rampDrag, String(valueFromPointer(wrap, prop, e.clientX)));
+                        return;
+                    }
+
+                    if (prop === 'l') return;
+
+                    if (e.target.closest('input')) {
+                        const onMove = () => { dragMoved = true; };
+                        document.addEventListener('pointermove', onMove);
+                        document.addEventListener('pointerup', () => {
+                            document.removeEventListener('pointermove', onMove);
+                        }, { once: true });
+                    }
+                });
+                wrap.addEventListener('pointermove', (e) => {
+                    if (prop === 'l' && wrap.classList.contains('l-pin-ramp-mode')) {
+                        const hover = lPinDrag !== null ? lPinDrag : pickLPinHandle(wrap, pal, e.clientX);
+                        if (hover >= 0) showLPinHints(wrap, hover);
+                        else hideLPinHints(wrap);
+                        if (lPinDrag === null) return;
+                        onLPinSlider(block, pal, lPinDrag, String(valueFromPointer(wrap, prop, e.clientX)));
+                        return;
+                    }
+                    if (!wrap.classList.contains('ramp-mode')) {
+                        showRampHint(null);
+                        return;
+                    }
+                    const hover = rampDrag || pickRampHandle(wrap, prop, e.clientX);
+                    showRampHint(hover);
+                    if (!rampDrag) return;
+                    onRampSlider(block, pal, prop, rampDrag, String(valueFromPointer(wrap, prop, e.clientX)));
+                });
+                wrap.addEventListener('pointerleave', () => {
+                    showRampHint(null);
+                    if (prop === 'l') hideLPinHints(wrap);
+                });
+                wrap.addEventListener('pointerup', () => {
+                    rampDrag = null;
+                    lPinDrag = null;
+                    showRampHint(null);
+                    if (prop === 'l') hideLPinHints(wrap);
+                });
+                wrap.addEventListener('lostpointercapture', () => {
+                    rampDrag = null;
+                    lPinDrag = null;
+                    showRampHint(null);
+                    if (prop === 'l') hideLPinHints(wrap);
+                });
+
+                wrap.addEventListener('click', (e) => {
+                    if (!altClick || dragMoved) return;
+                    if ((prop === 'h' || prop === 's') && pal.selected !== null) return;
+                    e.preventDefault();
+                    if (prop === 'h' || prop === 's') toggleRamp(block, pal, prop);
+                });
+
+                const minIn = wrap.querySelector('.ramp-min');
+                const maxIn = wrap.querySelector('.ramp-max');
+                if (minIn) minIn.oninput = e => onRampSlider(block, pal, prop, 'min', e.target.value);
+                if (maxIn) maxIn.oninput = e => onRampSlider(block, pal, prop, 'max', e.target.value);
+            });
+
+            editor.querySelector('.input-h').oninput = e => onSlider(block, pal, 'h', e.target.value);
+            editor.querySelector('.input-s').oninput = e => onSlider(block, pal, 's', e.target.value);
+            editor.querySelector('.input-l').oninput = e => onSlider(block, pal, 'l', e.target.value);
+
+            block.addEventListener('click', (e) => {
+                if (e.target.closest('.swatch')) return;
+                if (e.target.closest('.palette-editor, button, input, label')) return;
+                deselectPalette(block, pal);
+            });
+
+            block.append(toolbar, main, editor);
+            updateColorSpaceLabels(block);
+            applyBgPreview(block, pal);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
+            observeSliderTracks(block);
+            return block;
+        }
+
+        function render() {
+            const scrollPalettes = palettes.length > 2;
+            document.body.classList.toggle('scroll-palettes', scrollPalettes);
+            $('palettesContainer').replaceChildren(...palettes.map((pal, i) => buildPaletteBlock(pal, i)));
+            scheduleSliderTrackRefresh();
+        }
+
+        palettes = [createPalette(DEFAULT_STEPS, DEFAULT_HEX, DEFAULT_BG)];
+        generatePalette(palettes[0], true);
+        render();
+    </script>
+</body>
+</html>
