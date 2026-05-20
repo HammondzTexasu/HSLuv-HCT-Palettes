@@ -533,11 +533,10 @@
             min-height: 0;
         }
         .swatch-hex-center {
-            flex: 1;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 0;
             width: 100%;
         }
         .swatch-hex-row {
@@ -751,6 +750,38 @@
             width: 16px;
             height: 16px;
             display: block;
+        }
+        .swatch-above,
+        .swatch-below {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+        }
+        .swatch-above {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .swatch-next-chip {
+            width: 50%;
+            aspect-ratio: 1;
+            flex-shrink: 0;
+            border-radius: 2px;
+            opacity: 0;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+            pointer-events: auto;
+            filter: none;
+        }
+        .swatch-next-chip:hover,
+        .swatch-next-chip:focus,
+        .swatch-next-chip:focus-visible,
+        .swatch-next-chip:active {
+            filter: none;
+        }
+        .palette-row.chips-visible .swatch-next-chip {
+            opacity: 1;
         }
         .slider-ramp-wrap.ramp-mode .ramp-hint {
             position: absolute;
@@ -3096,6 +3127,42 @@
             wrap.style.backgroundColor = pal.bgPreview && hexToRgb(pal.bgHex) ? pal.bgHex : '';
         }
 
+        function getPaletteRow(block) {
+            return block.querySelector('.palette-row');
+        }
+
+        function toggleSwatchChipsLocked(block) {
+            const row = getPaletteRow(block);
+            if (!row) return;
+            if (row.dataset.chipsLocked === '1') {
+                delete row.dataset.chipsLocked;
+                row.classList.remove('chips-visible');
+            } else {
+                row.dataset.chipsLocked = '1';
+                row.classList.add('chips-visible');
+            }
+        }
+
+        function wireSwatchNextChip(chip, block) {
+            const row = () => getPaletteRow(block);
+
+            chip.addEventListener('mouseenter', () => {
+                const r = row();
+                if (!r || r.dataset.chipsLocked === '1') return;
+                r.classList.add('chips-visible');
+            });
+            chip.addEventListener('mouseleave', (e) => {
+                const r = row();
+                if (!r || r.dataset.chipsLocked === '1') return;
+                const rel = e.relatedTarget;
+                if (rel && r.contains(rel) && rel.closest('.swatch-next-chip')) return;
+                r.classList.remove('chips-visible');
+            });
+            chip.addEventListener('click', () => {
+                toggleSwatchChipsLocked(block);
+            });
+        }
+
         function updateSwatches(block, pal) {
             const row = block.querySelector('.palette-row');
             row.replaceChildren();
@@ -3122,6 +3189,20 @@
                     togglePin(block, pal, si);
                 };
                 head.append(nameEl, pinBtn);
+
+                const above = document.createElement('div');
+                above.className = 'swatch-above';
+                const nextChip = document.createElement('button');
+                nextChip.type = 'button';
+                nextChip.className = 'swatch-next-chip';
+                nextChip.title = 'Náhled dalšího kroku';
+                const nextStep = pal.steps[si + 1];
+                nextChip.style.background = nextStep?.hex ?? '#000000';
+                wireSwatchNextChip(nextChip, block);
+                above.appendChild(nextChip);
+
+                const below = document.createElement('div');
+                below.className = 'swatch-below';
 
                 const hexRow = document.createElement('div');
                 hexRow.className = 'swatch-hex-row';
@@ -3209,7 +3290,7 @@
                 wcagEl.textContent = wcag === null ? '—' : `WCAG ${wcag.toFixed(2)}:1`;
                 contrasts.append(apcaEl, wcagEl);
 
-                el.append(head, center, contrasts);
+                el.append(head, above, center, below, contrasts);
 
                 el.onclick = () => {
                     setSelection(pal, si);
