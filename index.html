@@ -45,6 +45,24 @@
             font-size: 0.85rem;
         }
         button:hover { filter: brightness(1.1); }
+        button.dark-mode-btn {
+            background: #1a1a24;
+            border: 1px solid #333;
+            color: #94a3b8;
+        }
+        button.dark-mode-btn:hover {
+            color: #fff;
+            border-color: #555;
+            filter: none;
+        }
+        button.dark-mode-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        button.dark-mode-btn.active:hover {
+            filter: brightness(1.1);
+        }
         button.ghost {
             background: #1a1a24;
             border: 1px solid #333;
@@ -155,6 +173,303 @@
             gap: 0.2rem;
             font-size: 0.7rem;
             color: #94a3b8;
+        }
+        .dm-gain-field {
+            min-width: 9.5rem;
+            max-width: 12rem;
+            flex: 1 1 9.5rem;
+        }
+        .dm-gain-field.dm-gain-hidden {
+            display: none !important;
+        }
+        .dm-gain-field .slider-ramp-wrap {
+            width: 100%;
+        }
+        .interp-ctx-menu,
+        .interp-ctx-menu {
+            position: fixed;
+            z-index: 2100;
+            min-width: 10rem;
+            padding: 0.25rem 0;
+            background: #151520;
+            border: 1px solid #333;
+            border-radius: 6px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+        }
+        .interp-ctx-menu button,
+        .gain-ctx-menu button {
+            display: block;
+            width: 100%;
+            padding: 0.4rem 0.65rem;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            text-align: left;
+            cursor: pointer;
+        }
+        .interp-ctx-menu button:hover,
+        .gain-ctx-menu button:hover {
+            background: #1e293b;
+            filter: none;
+        }
+        .bezier-editor-popover {
+            position: fixed;
+            z-index: 2200;
+            width: min(100vw - 1rem, 16.5rem);
+            padding: 0.65rem;
+            background: #12121a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-size: 0.72rem;
+            color: #94a3b8;
+        }
+        .bezier-editor-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.35rem;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+        .bezier-editor-head.is-dragging {
+            cursor: grabbing;
+        }
+        .bezier-editor-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        .bezier-editor-close {
+            padding: 0.15rem 0.4rem;
+            font-size: 1rem;
+            line-height: 1;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+        }
+        .bezier-editor-close:hover {
+            color: #e2e8f0;
+            filter: none;
+        }
+        .bezier-graph-wrap {
+            position: relative;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: #0d0d12;
+            touch-action: none;
+        }
+        .bezier-graph {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1;
+        }
+        .bezier-graph .bezier-handle {
+            cursor: grab;
+            fill: var(--accent);
+            stroke: #fff;
+            stroke-width: 2;
+        }
+        .bezier-graph .bezier-handle:active {
+            cursor: grabbing;
+        }
+        .bezier-css-row input[type="text"] {
+            width: 100%;
+            text-transform: none;
+            font-size: 0.7rem;
+        }
+        .bezier-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+        .bezier-presets button {
+            padding: 0.28rem 0.45rem;
+            font-size: 0.68rem;
+            background: #1a1a24;
+            border: 1px solid #333;
+            color: #cbd5e1;
+        }
+        .bezier-presets button:hover {
+            border-color: #555;
+            color: #fff;
+            filter: none;
+        }
+        .bezier-presets button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .input-with-swatch {
+            position: relative;
+            display: inline-flex;
+            width: 7rem;
+        }
+        .input-with-swatch input[type="text"] {
+            width: 100%;
+            padding-right: 1.65rem;
+        }
+        .input-with-swatch.has-extra input[type="text"] {
+            padding-right: 3.15rem;
+        }
+        .color-swatch-btn {
+            position: absolute;
+            right: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.15rem;
+            height: 1.15rem;
+            padding: 0;
+            border: 1px solid #555;
+            border-radius: 3px;
+            cursor: pointer;
+            background: #2a2a36;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+        }
+        .input-with-swatch.has-extra .color-swatch-btn {
+            right: 1.68rem;
+        }
+        .color-swatch-btn:hover {
+            border-color: #94a3b8;
+        }
+        .color-picker-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+        }
+        .color-picker {
+            position: fixed;
+            z-index: 2001;
+            width: 15.5rem;
+            padding: 0.65rem;
+            background: #12121a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-size: 0.72rem;
+            color: #94a3b8;
+        }
+        .color-picker-sv-wrap {
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        .color-picker-sv {
+            display: block;
+            width: 100%;
+            height: 9rem;
+            cursor: crosshair;
+        }
+        .color-picker-sv-cursor {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            margin: 0;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+        .color-picker-sliders {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .color-picker-preview {
+            flex: 0 0 2.25rem;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+        .color-picker-hue-wrap {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+        }
+        .color-picker-hue {
+            width: 100%;
+            height: 14px;
+            margin: 0;
+            border-radius: 7px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right,
+                #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+            cursor: pointer;
+        }
+        .color-picker-hue::-webkit-slider-runnable-track {
+            height: 14px;
+            border-radius: 7px;
+            background: transparent;
+        }
+        .color-picker-hue::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            margin-top: 0;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+            cursor: pointer;
+        }
+        .color-picker-hue::-moz-range-track {
+            height: 14px;
+            border-radius: 7px;
+            background: linear-gradient(to right,
+                #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+        }
+        .color-picker-hue::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(0, 0, 0, 0.45);
+            cursor: pointer;
+        }
+        .color-picker-row {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .color-picker-row > span {
+            flex: 0 0 2rem;
+            font-size: 0.68rem;
+        }
+        .color-picker-row input[type="text"] {
+            flex: 1;
+            min-width: 0;
+            width: auto;
+            text-transform: none;
+            font-size: 0.72rem;
+            padding: 0.3rem 0.45rem;
+        }
+        .color-picker-rgb {
+            display: flex;
+            gap: 0.25rem;
+            flex: 1;
+            min-width: 0;
+        }
+        .color-picker-rgb input[type="text"] {
+            flex: 1;
+            min-width: 0;
+            text-align: center;
         }
         .input-with-eye {
             position: relative;
@@ -477,14 +792,61 @@
             gap: 0.35rem;
             min-width: 0;
         }
-        label span.val,
-        .slider-top .val {
+        .val-wrap {
+            display: inline-flex;
+            align-items: baseline;
+            justify-content: flex-end;
+            flex-shrink: 0;
+            max-width: 55%;
+            min-width: 2.5rem;
+            vertical-align: baseline;
             font-family: ui-monospace, monospace;
             color: #e2e8f0;
-            min-width: 0;
+            gap: 0;
+        }
+        .val-segment {
+            position: relative;
+            display: inline-block;
+            flex-shrink: 0;
+            max-width: 5rem;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+        .val-wrap.val-editable .val-segment {
+            cursor: text;
+        }
+        .val-wrap.val-editable .val-segment:hover {
+            color: #fff;
+        }
+        .val-sep {
+            flex-shrink: 0;
+            opacity: 0.55;
+            padding: 0 0.12rem;
+            pointer-events: none;
+            user-select: none;
+        }
+        .val-segment .val-input {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0 2px;
+            box-sizing: border-box;
+            border: 1px solid var(--accent);
+            border-radius: 2px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font: inherit;
+            font-family: ui-monospace, monospace;
+            font-size: inherit;
+            line-height: inherit;
+            text-align: center;
+            outline: none;
+        }
+        .val-segment .val-input.error {
+            border-color: #f43f5e;
         }
         .slider-top .slider-axis {
             flex-shrink: 0;
@@ -762,10 +1124,19 @@
             return String(50 * (index + 1));
         }
 
+        function sanitizeHexInput(raw) {
+            return String(raw ?? '').replace(/#/g, '').replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
+        }
+
         function normalizeHex(hex) {
-            const h = hex.replace(/^#/, '').trim();
-            if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+            const h = sanitizeHexInput(hex);
+            if (h.length !== 6) return null;
             return '#' + h.toUpperCase();
+        }
+
+        function toolbarHexDisplay(hex) {
+            const norm = normalizeHex(hex);
+            return norm ? norm.slice(1) : sanitizeHexInput(hex);
         }
 
         function hexToArgb(hex) {
@@ -840,6 +1211,7 @@
             colorSpace = next;
             palettes.forEach(pal => refreshStepHex(pal));
             render();
+            afterPrimaryPaletteChange();
         }
 
         function buildColorSpaceToggle() {
@@ -869,16 +1241,372 @@
             return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
         }
 
-        function isLightHex(hex) {
+        function rgbToHex(r, g, b) {
+            const c = v => Math.max(0, Math.min(255, Math.round(Number(v))));
+            const rr = c(r), gg = c(g), bb = c(b);
+            return '#' + [rr, gg, bb].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+        }
+
+        function updateToolbarSwatch(btn, hex) {
+            const norm = normalizeHex(hex);
+            btn.style.background = norm && hexToRgb(norm) ? norm : '#2a2a36';
+        }
+
+        function rgbToHsv(r, g, b) {
+            const rn = r / 255;
+            const gn = g / 255;
+            const bn = b / 255;
+            const max = Math.max(rn, gn, bn);
+            const min = Math.min(rn, gn, bn);
+            const d = max - min;
+            let h = 0;
+            const s = max === 0 ? 0 : (d / max) * 100;
+            const v = max * 100;
+            if (d > 0) {
+                if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) * 60;
+                else if (max === gn) h = ((bn - rn) / d + 2) * 60;
+                else h = ((rn - gn) / d + 4) * 60;
+            }
+            return { h, s, v };
+        }
+
+        function hsvToRgb(h, s, v) {
+            const hue = ((h % 360) + 360) % 360;
+            const sat = Math.max(0, Math.min(100, s)) / 100;
+            const val = Math.max(0, Math.min(100, v)) / 100;
+            const c = val * sat;
+            const x = c * (1 - Math.abs((hue / 60) % 2 - 1));
+            const m = val - c;
+            let rp = 0;
+            let gp = 0;
+            let bp = 0;
+            if (hue < 60) { rp = c; gp = x; }
+            else if (hue < 120) { rp = x; gp = c; }
+            else if (hue < 180) { gp = c; bp = x; }
+            else if (hue < 240) { gp = x; bp = c; }
+            else if (hue < 300) { rp = x; bp = c; }
+            else { rp = c; bp = x; }
+            return [
+                Math.round((rp + m) * 255),
+                Math.round((gp + m) * 255),
+                Math.round((bp + m) * 255)
+            ];
+        }
+
+        function hexToHsv(hex) {
             const rgb = hexToRgb(hex);
-            if (!rgb) return true;
-            const y = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
-            return y > 0.55;
+            if (!rgb) return null;
+            return rgbToHsv(rgb[0], rgb[1], rgb[2]);
+        }
+
+        function hsvToHex(h, s, v) {
+            const [r, g, b] = hsvToRgb(h, s, v);
+            return rgbToHex(r, g, b);
+        }
+
+        let colorPickerOpen = null;
+
+        function closeColorPicker() {
+            if (!colorPickerOpen) return;
+            const onCommit = colorPickerOpen.onCommit;
+            document.removeEventListener('keydown', colorPickerOpen.onKey);
+            colorPickerOpen.overlay.remove();
+            colorPickerOpen = null;
+            onCommit?.();
+        }
+
+        function positionColorPicker(panel, anchor) {
+            const rect = anchor.getBoundingClientRect();
+            const margin = 6;
+            let top = rect.bottom + margin;
+            let left = rect.left;
+            panel.style.visibility = 'hidden';
+            panel.style.top = '0';
+            panel.style.left = '0';
+            const pw = panel.offsetWidth;
+            const ph = panel.offsetHeight;
+            if (left + pw > window.innerWidth - margin) {
+                left = Math.max(margin, window.innerWidth - pw - margin);
+            }
+            if (top + ph > window.innerHeight - margin) {
+                top = Math.max(margin, rect.top - ph - margin);
+            }
+            panel.style.left = left + 'px';
+            panel.style.top = top + 'px';
+            panel.style.visibility = '';
+        }
+
+        function openColorPicker(anchor, getHex, onLive, onCommit) {
+            closeColorPicker();
+
+            const startHex = normalizeHex(getHex()) || '#808080';
+            let hsv = hexToHsv(startHex) || { h: 0, s: 0, v: 50 };
+            let draftHex = startHex;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'color-picker-overlay';
+            const panel = document.createElement('div');
+            panel.className = 'color-picker';
+            panel.setAttribute('role', 'dialog');
+            panel.setAttribute('aria-label', 'Výběr barvy');
+
+            const svWrap = document.createElement('div');
+            svWrap.className = 'color-picker-sv-wrap';
+            const svCanvas = document.createElement('canvas');
+            svCanvas.className = 'color-picker-sv';
+            svCanvas.width = 220;
+            svCanvas.height = 144;
+            const svCursor = document.createElement('div');
+            svCursor.className = 'color-picker-sv-cursor';
+            svWrap.append(svCanvas, svCursor);
+
+            const sliderRow = document.createElement('div');
+            sliderRow.className = 'color-picker-sliders';
+            const preview = document.createElement('div');
+            preview.className = 'color-picker-preview';
+            const hueWrap = document.createElement('div');
+            hueWrap.className = 'color-picker-hue-wrap';
+            const hueRange = document.createElement('input');
+            hueRange.type = 'range';
+            hueRange.className = 'color-picker-hue';
+            hueRange.min = '0';
+            hueRange.max = '360';
+            hueRange.step = '1';
+            hueRange.value = String(Math.round(hsv.h));
+            hueWrap.appendChild(hueRange);
+            sliderRow.append(preview, hueWrap);
+
+            const hexRow = document.createElement('div');
+            hexRow.className = 'color-picker-row';
+            const hexIn = document.createElement('input');
+            hexIn.type = 'text';
+            hexIn.spellcheck = false;
+            hexIn.autocomplete = 'off';
+            hexIn.value = draftHex;
+            const hexLbl = document.createElement('span');
+            hexLbl.textContent = 'HEX';
+            hexRow.append(hexLbl, hexIn);
+
+            const rgbRow = document.createElement('div');
+            rgbRow.className = 'color-picker-row';
+            const rgbLbl = document.createElement('span');
+            rgbLbl.textContent = 'RGB';
+            const rgbWrap = document.createElement('div');
+            rgbWrap.className = 'color-picker-rgb';
+            const rgbInputs = ['R', 'G', 'B'].map(label => {
+                const inp = document.createElement('input');
+                inp.type = 'text';
+                inp.inputMode = 'numeric';
+                inp.placeholder = label;
+                inp.title = label;
+                return inp;
+            });
+            rgbRow.append(rgbLbl, rgbWrap);
+            rgbInputs.forEach(inp => rgbWrap.appendChild(inp));
+
+            panel.append(svWrap, sliderRow, hexRow, rgbRow);
+            overlay.appendChild(panel);
+            document.body.appendChild(overlay);
+
+            const svCtx = svCanvas.getContext('2d');
+
+            const syncFromHsv = () => {
+                draftHex = hsvToHex(hsv.h, hsv.s, hsv.v) || draftHex;
+                const norm = normalizeHex(draftHex);
+                if (norm) draftHex = norm;
+                preview.style.background = draftHex;
+                hueRange.style.accentColor = hsvToHex(hsv.h, 100, 100) || draftHex;
+                hexIn.value = draftHex;
+                const rgb = hexToRgb(draftHex) || [128, 128, 128];
+                rgbInputs[0].value = String(rgb[0]);
+                rgbInputs[1].value = String(rgb[1]);
+                rgbInputs[2].value = String(rgb[2]);
+                hueRange.value = String(Math.round(hsv.h));
+                updateSvCursor();
+                onLive(draftHex);
+            };
+
+            const syncFromHex = () => {
+                const norm = normalizeHex(hexIn.value.trim());
+                if (!norm) return false;
+                const next = hexToHsv(norm);
+                if (!next) return false;
+                hsv = next;
+                draftHex = norm;
+                syncFromHsv();
+                drawSv();
+                return true;
+            };
+
+            const syncFromRgb = () => {
+                const hex = rgbToHex(rgbInputs[0].value, rgbInputs[1].value, rgbInputs[2].value);
+                if (!normalizeHex(hex)) return false;
+                hexIn.value = hex;
+                return syncFromHex();
+            };
+
+            function updateSvCursor() {
+                svCursor.style.left = hsv.s + '%';
+                svCursor.style.top = (100 - hsv.v) + '%';
+            }
+
+            function drawSv() {
+                const w = svCanvas.width;
+                const h = svCanvas.height;
+                const img = svCtx.createImageData(w, h);
+                for (let y = 0; y < h; y++) {
+                    const v = (1 - y / (h - 1 || 1)) * 100;
+                    for (let x = 0; x < w; x++) {
+                        const s = (x / (w - 1 || 1)) * 100;
+                        const [r, g, b] = hsvToRgb(hsv.h, s, v);
+                        const i = (y * w + x) * 4;
+                        img.data[i] = r;
+                        img.data[i + 1] = g;
+                        img.data[i + 2] = b;
+                        img.data[i + 3] = 255;
+                    }
+                }
+                svCtx.putImageData(img, 0, 0);
+                updateSvCursor();
+            }
+
+            function pickFromSv(clientX, clientY) {
+                const rect = svCanvas.getBoundingClientRect();
+                const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+                const y = Math.max(0, Math.min(rect.height, clientY - rect.top));
+                hsv.s = (x / (rect.width || 1)) * 100;
+                hsv.v = (1 - y / (rect.height || 1)) * 100;
+                syncFromHsv();
+            }
+
+            let svDragging = false;
+            svCanvas.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                svDragging = true;
+                svCanvas.setPointerCapture(e.pointerId);
+                pickFromSv(e.clientX, e.clientY);
+            });
+            svCanvas.addEventListener('pointermove', (e) => {
+                if (!svDragging) return;
+                pickFromSv(e.clientX, e.clientY);
+            });
+            svCanvas.addEventListener('pointerup', () => { svDragging = false; });
+            svCanvas.addEventListener('lostpointercapture', () => { svDragging = false; });
+
+            hueRange.oninput = () => {
+                hsv.h = parseFloat(hueRange.value);
+                drawSv();
+                syncFromHsv();
+            };
+
+            hexIn.oninput = () => {
+                const cleaned = sanitizeHexInput(hexIn.value);
+                if (hexIn.value !== cleaned) hexIn.value = cleaned;
+                if (cleaned.length === 6) {
+                    syncFromHex();
+                } else {
+                    preview.style.background = normalizeHex(cleaned) || preview.style.background;
+                }
+            };
+            hexIn.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    if (!syncFromHex()) hexIn.classList.add('error');
+                    else hexIn.classList.remove('error');
+                }
+            };
+            hexIn.onblur = () => {
+                if (!syncFromHex()) syncFromHsv();
+                hexIn.classList.remove('error');
+            };
+
+            rgbInputs.forEach(inp => {
+                inp.oninput = () => syncFromRgb();
+                inp.onkeydown = (e) => {
+                    if (e.key === 'Enter') syncFromRgb();
+                };
+            });
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeColorPicker();
+            });
+            panel.addEventListener('click', (e) => e.stopPropagation());
+            const onKey = (e) => {
+                if (e.key === 'Escape') closeColorPicker();
+            };
+            document.addEventListener('keydown', onKey);
+
+            colorPickerOpen = { overlay, panel, onKey, onCommit };
+
+            drawSv();
+            syncFromHsv();
+            positionColorPicker(panel, anchor);
+            requestAnimationFrame(() => positionColorPicker(panel, anchor));
+        }
+
+        function wireToolbarHexInput(input, onValidHex) {
+            input.addEventListener('input', () => {
+                const cleaned = sanitizeHexInput(input.value);
+                if (input.value !== cleaned) input.value = cleaned;
+                const norm = normalizeHex(cleaned);
+                if (norm) onValidHex(norm);
+            });
+            input.addEventListener('blur', () => {
+                const norm = normalizeHex(input.value);
+                if (norm) input.value = norm.slice(1);
+            });
+        }
+
+        function attachToolbarColorSwatch(input, onLive, onCommit) {
+            const wrap = input.parentElement;
+            const swatch = document.createElement('button');
+            swatch.type = 'button';
+            swatch.className = 'color-swatch-btn';
+            swatch.title = 'Vybrat barvu';
+            updateToolbarSwatch(swatch, input.value);
+            swatch.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openColorPicker(
+                    swatch,
+                    () => normalizeHex(input.value) || '#808080',
+                    (hex) => {
+                        input.value = hex.slice(1);
+                        updateToolbarSwatch(swatch, hex);
+                        onLive(hex);
+                    },
+                    onCommit
+                );
+            });
+            input.addEventListener('input', () => updateToolbarSwatch(swatch, input.value));
+            wrap.appendChild(swatch);
+        }
+
+        function relativeLuminance(hex) {
+            const rgb = hexToRgb(hex);
+            if (!rgb) return null;
+            const lin = c => {
+                c /= 255;
+                return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+            };
+            return 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+        }
+
+        function isLightHex(hex) {
+            const y = relativeLuminance(hex);
+            return y == null ? true : y > 0.55;
         }
 
         function getApcaContrast(fgHex, bgHex) {
             try {
-                return calcContrast(fgHex, bgHex, 'apca', COLOR_SPACE);
+                const lc = calcContrast(fgHex, bgHex, 'apca', COLOR_SPACE);
+                if (lc == null || Number.isNaN(lc)) return null;
+                if (lc < 0) return lc;
+                const mag = Math.abs(lc);
+                const fgY = relativeLuminance(fgHex);
+                const bgY = relativeLuminance(bgHex);
+                if (fgY == null || bgY == null) return mag;
+                if (mag < 0.05) return 0;
+                return fgY > bgY ? -mag : mag;
             } catch { return null; }
         }
 
@@ -894,6 +1622,858 @@
             const lighter = Math.max(l1, l2);
             const darker = Math.min(l1, l2);
             return (lighter + 0.05) / (darker + 0.05);
+        }
+
+        function solveLForWcag(h, s, targetRatio, bgHex, hintL) {
+            if (targetRatio == null || !hexToRgb(bgHex)) return hintL;
+            let bestL = hintL;
+            let bestErr = Infinity;
+            for (let i = 0; i <= 1000; i++) {
+                const l = Math.round(i) / 10;
+                const hex = modelToHex(h, s, l);
+                if (!hex) continue;
+                const r = calcWcagRatio(hex, bgHex);
+                if (r == null) continue;
+                const err = Math.abs(r - targetRatio);
+                if (err < bestErr) {
+                    bestErr = err;
+                    bestL = l;
+                }
+            }
+            return Math.round(Math.max(0, Math.min(100, bestL)) * 10) / 10;
+        }
+
+        function isPrimaryPalette(pal) {
+            return palettes[0] === pal;
+        }
+
+        function getPaletteBlock(pi) {
+            return document.querySelector(`.palette-block[data-palette-index="${pi}"]`);
+        }
+
+        function getPaletteBlockForPal(pal) {
+            const pi = palettes.indexOf(pal);
+            return pi >= 0 ? getPaletteBlock(pi) : null;
+        }
+
+        function getToolbarBgInput(block) {
+            const fields = block?.querySelectorAll('.palette-toolbar .toolbar-field input');
+            return fields?.[1] ?? null;
+        }
+
+        function syncToolbarBgSwatch(block, pal) {
+            const bgIn = getToolbarBgInput(block);
+            if (!bgIn) return;
+            const swatch = bgIn.parentElement?.querySelector('.color-swatch-btn');
+            if (swatch) updateToolbarSwatch(swatch, pal.bgHex);
+        }
+
+        function commitToolbarBgChange(block, pal, pi) {
+            if (!hexToRgb(pal.bgHex)) return;
+            if (pi === 0) {
+                afterPrimaryPaletteChange();
+                if (block) {
+                    updateSwatches(block, pal);
+                    syncEditor(block, pal);
+                }
+            } else if (pal.darkMode) {
+                recalcStepsLForDarkMode(pal);
+                if (block) {
+                    updateSwatches(block, pal);
+                    syncEditor(block, pal);
+                }
+            }
+        }
+
+        function clampGain(n) {
+            return Math.round(Math.max(0, Math.min(100, n)));
+        }
+
+        const INTERP_BEZIER_LINEAR = [0, 0, 1, 1];
+        const INTERP_BEZIER_PRESETS = {
+            linear: { label: 'Lineární', v: [0, 0, 1, 1] },
+            ease: { label: 'Ease', v: [0.25, 0.1, 0.25, 1] },
+            'ease-in': { label: 'Ease in', v: [0.42, 0, 1, 1] },
+            'ease-out': { label: 'Ease out', v: [0, 0, 0.58, 1] },
+            'ease-in-out': { label: 'Ease in-out', v: [0.42, 0, 0.58, 1] }
+        };
+
+        function interpCurveKey(prop, segIndex) {
+            return `${prop}:${segIndex}`;
+        }
+
+        function ensureInterpCurve(pal, prop, segIndex) {
+            if (!pal.interpCurves) pal.interpCurves = {};
+            const key = interpCurveKey(prop, segIndex);
+            if (!pal.interpCurves[key]) {
+                pal.interpCurves[key] = INTERP_BEZIER_LINEAR.slice();
+            }
+        }
+
+        function getInterpCurve(pal, prop, segIndex) {
+            if (!pal.interpCurves) pal.interpCurves = {};
+            const key = interpCurveKey(prop, segIndex);
+            if (!pal.interpCurves[key] && prop === 'gain' && segIndex === 0 && pal.dmGainBezier?.length === 4) {
+                pal.interpCurves[key] = pal.dmGainBezier.map(v => Math.max(0, Math.min(1, Number(v))));
+            }
+            ensureInterpCurve(pal, prop, segIndex);
+            return pal.interpCurves[key].map(v => Math.max(0, Math.min(1, Number(v))));
+        }
+
+        function setInterpCurve(pal, prop, segIndex, b) {
+            if (!pal.interpCurves) pal.interpCurves = {};
+            pal.interpCurves[interpCurveKey(prop, segIndex)] =
+                b.map(v => Math.max(0, Math.min(1, Number(v))));
+            if (prop === 'gain' && segIndex === 0) {
+                pal.dmGainBezier = pal.interpCurves[interpCurveKey(prop, segIndex)].slice();
+            }
+        }
+
+        function formatBezierCss(b) {
+            const parts = b.map(v => {
+                const s = (Math.round(v * 1000) / 1000).toFixed(3);
+                return s.replace(/\.?0+$/, '') || '0';
+            });
+            return `cubic-bezier(${parts.join(', ')})`;
+        }
+
+        function parseBezierInput(raw) {
+            const s = String(raw ?? '').trim();
+            const m = s.match(/cubic-bezier\s*\(\s*([^)]+)\)/i);
+            const nums = (m ? m[1] : s).split(/[\s,]+/).map(Number).filter(n => !Number.isNaN(n));
+            if (nums.length !== 4) return null;
+            return nums.map(v => Math.max(0, Math.min(1, v)));
+        }
+
+        function bezierAxis(u, p0, p1, p2, p3) {
+            const t = 1 - u;
+            return t * t * t * p0 + 3 * t * t * u * p1 + 3 * t * u * u * p2 + u * u * u * p3;
+        }
+
+        function sampleInterpBezier(x, b) {
+            const [x1, y1, x2, y2] = b;
+            x = Math.max(0, Math.min(1, x));
+            if (x <= 0) return 0;
+            if (x >= 1) return 1;
+            let lo = 0;
+            let hi = 1;
+            for (let i = 0; i < 24; i++) {
+                const mid = (lo + hi) / 2;
+                if (bezierAxis(mid, 0, x1, x2, 1) < x) lo = mid;
+                else hi = mid;
+            }
+            const u = (lo + hi) / 2;
+            return Math.max(0, Math.min(1, bezierAxis(u, 0, y1, y2, 1)));
+        }
+
+        function dmGainAtIndex(pal, i) {
+            if (!pal.dmGainRamp) return pal.dmGain ?? 0;
+            const n = pal.steps.length;
+            const start = pal.dmGainStart ?? 0;
+            const end = pal.dmGainEnd ?? 0;
+            if (n < 2) return start;
+            const t = i / (n - 1);
+            const eased = sampleInterpBezier(t, getInterpCurve(pal, 'gain', 0));
+            return start + (end - start) * eased;
+        }
+
+        function isSliderInterpActive(pal, prop, wrap) {
+            if (!wrap) return false;
+            if (prop === 'gain') return pal.darkMode && pal.dmGainRamp;
+            if (isAnchorMode(pal) && getPinnedIndices(pal).length >= 2) {
+                if (prop === 'l') return pal.lInterp;
+                return prop === 'h' || prop === 's';
+            }
+            if (prop === 'h') return pal.hRamp && wrap.classList.contains('ramp-mode');
+            if (prop === 's') return pal.sRamp && wrap.classList.contains('ramp-mode');
+            if (prop === 'l') return pal.lInterp;
+            return false;
+        }
+
+        function pickAnchorSegmentByX(wrap, pal, prop, clientX) {
+            const anchors = getPinnedIndices(pal);
+            if (anchors.length < 2) return 0;
+            const { min, max } = rampRange(prop);
+            const rect = wrap.getBoundingClientRect();
+            const x = clientX - rect.left;
+            const w = rect.width || 1;
+            for (let a = 0; a < anchors.length - 1; a++) {
+                const v0 = pal.steps[anchors[a]][prop];
+                const v1 = pal.steps[anchors[a + 1]][prop];
+                const x0 = (valueToTrackPct(v0, min, max, w) / 100) * w;
+                const x1 = (valueToTrackPct(v1, min, max, w) / 100) * w;
+                if (x >= Math.min(x0, x1) && x <= Math.max(x0, x1)) return a;
+            }
+            let best = 0;
+            let bestD = Infinity;
+            for (let a = 0; a < anchors.length - 1; a++) {
+                const v0 = pal.steps[anchors[a]][prop];
+                const v1 = pal.steps[anchors[a + 1]][prop];
+                const x0 = (valueToTrackPct(v0, min, max, w) / 100) * w;
+                const x1 = (valueToTrackPct(v1, min, max, w) / 100) * w;
+                const d = Math.abs(x - (x0 + x1) / 2);
+                if (d < bestD) {
+                    bestD = d;
+                    best = a;
+                }
+            }
+            return best;
+        }
+
+        function pickInterpSegmentIndex(pal, prop, wrap, clientX) {
+            if (isAnchorMode(pal)) return pickAnchorSegmentByX(wrap, pal, prop, clientX);
+            if (prop === 'l' && useLPinHandles(pal)) {
+                return pickLPinSegmentByX(wrap, pal, clientX);
+            }
+            return 0;
+        }
+
+        function pickLPinSegmentByX(wrap, pal, clientX) {
+            const anchors = getPinnedIndices(pal);
+            if (anchors.length < 2) return 0;
+            const rect = wrap.getBoundingClientRect();
+            const x = clientX - rect.left;
+            const w = rect.width || 1;
+            for (let a = 0; a < anchors.length - 1; a++) {
+                const x0 = (valueToTrackPct(pal.steps[anchors[a]].l, 0, 100, w) / 100) * w;
+                const x1 = (valueToTrackPct(pal.steps[anchors[a + 1]].l, 0, 100, w) / 100) * w;
+                if (x >= Math.min(x0, x1) && x <= Math.max(x0, x1)) return a;
+            }
+            let best = 0;
+            let bestD = Infinity;
+            for (let a = 0; a < anchors.length - 1; a++) {
+                const x0 = (valueToTrackPct(pal.steps[anchors[a]].l, 0, 100, w) / 100) * w;
+                const x1 = (valueToTrackPct(pal.steps[anchors[a + 1]].l, 0, 100, w) / 100) * w;
+                const d = Math.abs(x - (x0 + x1) / 2);
+                if (d < bestD) {
+                    bestD = d;
+                    best = a;
+                }
+            }
+            return best;
+        }
+
+        function interpSegmentTitle(pal, prop, segIndex) {
+            const anchors = getPinnedIndices(pal);
+            if ((prop === 'l' && useLPinHandles(pal)) || (isAnchorMode(pal) && anchors.length >= 2)) {
+                const i0 = anchors[segIndex];
+                const i1 = anchors[segIndex + 1];
+                if (i0 != null && i1 != null) {
+                    return `Křivka · ${stepScaleName(i0)}–${stepScaleName(i1)}`;
+                }
+            }
+            if (prop === 'gain') return 'Křivka · Gain';
+            const labels = AXIS_LABELS[colorSpace];
+            if (prop === 'h') return `Křivka · ${labels.h}`;
+            if (prop === 's') return `Křivka · ${labels.s}`;
+            if (prop === 'l') return `Křivka · ${labels.l}`;
+            return 'Křivka interpolace';
+        }
+
+        function applyInterpForProp(block, pal, prop) {
+            if (prop === 'gain') {
+                applyDmGainAll(pal);
+                if (block) {
+                    syncDmGainUi(block, pal);
+                    updateSwatches(block, pal);
+                    syncEditor(block, pal);
+                }
+                if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
+                return;
+            }
+            if (isAnchorMode(pal)) {
+                if (prop === 'l') applyAnchorInterpL(pal);
+                else if (prop === 'h' || prop === 's') applyAnchorInterp(pal);
+            } else if (prop === 'l') applyLInterp(pal);
+            else if (prop === 'h' || prop === 's') applyPropRamp(pal, prop);
+            if (block) {
+                updateSwatches(block, pal);
+                syncEditor(block, pal);
+            }
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
+        }
+
+        function ensureInterpCurvesForPalette(pal, prop) {
+            if ((prop === 'l' && useLPinHandles(pal)) || (isAnchorMode(pal) && getPinnedIndices(pal).length >= 2)) {
+                const anchors = getPinnedIndices(pal);
+                for (let a = 0; a < anchors.length - 1; a++) {
+                    ensureInterpCurve(pal, prop, a);
+                }
+            } else {
+                ensureInterpCurve(pal, prop, 0);
+            }
+        }
+
+        let interpCtxMenuEl = null;
+        let bezierEditorOpen = null;
+
+        function closeInterpCtxMenu() {
+            interpCtxMenuEl?.remove();
+            interpCtxMenuEl = null;
+        }
+
+        function showInterpContextMenu(e, block, pal, wrap, prop) {
+            if (!isSliderInterpActive(pal, prop, wrap)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            closeInterpCtxMenu();
+            const segIndex = pickInterpSegmentIndex(pal, prop, wrap, e.clientX);
+            const menu = document.createElement('div');
+            menu.className = 'interp-ctx-menu';
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.textContent = 'Křivka interpolace';
+            item.onclick = (ev) => {
+                ev.stopPropagation();
+                closeInterpCtxMenu();
+                openInterpBezierEditor(block, pal, wrap, prop, segIndex);
+            };
+            menu.appendChild(item);
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            document.body.appendChild(menu);
+            interpCtxMenuEl = menu;
+            requestAnimationFrame(() => {
+                document.addEventListener('click', closeInterpCtxMenu, { once: true });
+                document.addEventListener('contextmenu', closeInterpCtxMenu, { once: true });
+            });
+        }
+
+        function closeBezierEditor() {
+            if (!bezierEditorOpen) return;
+            document.removeEventListener('keydown', bezierEditorOpen.onKey);
+            document.removeEventListener('pointerdown', bezierEditorOpen.onDocPointerDown, true);
+            bezierEditorOpen.panel.remove();
+            bezierEditorOpen = null;
+        }
+
+        function positionFloatingPanel(panel, anchor) {
+            const rect = anchor.getBoundingClientRect();
+            const margin = 6;
+            let top = rect.bottom + margin;
+            let left = rect.left;
+            panel.style.visibility = 'hidden';
+            panel.style.top = '0';
+            panel.style.left = '0';
+            const pw = panel.offsetWidth;
+            const ph = panel.offsetHeight;
+            if (left + pw > window.innerWidth - margin) {
+                left = Math.max(margin, window.innerWidth - pw - margin);
+            }
+            if (top + ph > window.innerHeight - margin) {
+                top = Math.max(margin, rect.top - ph - margin);
+            }
+            panel.style.left = left + 'px';
+            panel.style.top = top + 'px';
+            panel.style.visibility = '';
+        }
+
+        function openInterpBezierEditor(block, pal, anchor, prop, segIndex) {
+            if (!isSliderInterpActive(pal, prop, anchor)) return;
+            const editorKey = `${prop}:${segIndex}`;
+            if (bezierEditorOpen?.block === block && bezierEditorOpen?.key === editorKey) {
+                closeBezierEditor();
+                return;
+            }
+            closeBezierEditor();
+
+            let bez = getInterpCurve(pal, prop, segIndex).slice();
+            const panel = document.createElement('div');
+            panel.className = 'bezier-editor-popover';
+            panel.setAttribute('role', 'dialog');
+            panel.setAttribute('aria-label', 'Křivka interpolace');
+
+            const head = document.createElement('div');
+            head.className = 'bezier-editor-head';
+            const title = document.createElement('div');
+            title.className = 'bezier-editor-title';
+            title.textContent = interpSegmentTitle(pal, prop, segIndex);
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'bezier-editor-close';
+            closeBtn.title = 'Zavřít';
+            closeBtn.textContent = '×';
+            head.append(title, closeBtn);
+
+            const graphWrap = document.createElement('div');
+            graphWrap.className = 'bezier-graph-wrap';
+            const svgNs = 'http://www.w3.org/2000/svg';
+            const svg = document.createElementNS(svgNs, 'svg');
+            svg.setAttribute('class', 'bezier-graph');
+            svg.setAttribute('viewBox', '0 0 220 220');
+
+            const grid = document.createElementNS(svgNs, 'rect');
+            grid.setAttribute('x', '20');
+            grid.setAttribute('y', '20');
+            grid.setAttribute('width', '180');
+            grid.setAttribute('height', '180');
+            grid.setAttribute('fill', '#111118');
+            grid.setAttribute('stroke', '#2a2a36');
+
+            const diag = document.createElementNS(svgNs, 'line');
+            diag.setAttribute('stroke', '#334155');
+            diag.setAttribute('stroke-dasharray', '4 3');
+
+            const line1 = document.createElementNS(svgNs, 'line');
+            line1.setAttribute('stroke', '#64748b');
+            line1.setAttribute('stroke-width', '1');
+            const line2 = document.createElementNS(svgNs, 'line');
+            line2.setAttribute('stroke', '#64748b');
+            line2.setAttribute('stroke-width', '1');
+
+            const curve = document.createElementNS(svgNs, 'path');
+            curve.setAttribute('fill', 'none');
+            curve.setAttribute('stroke', 'var(--accent)');
+            curve.setAttribute('stroke-width', '2.5');
+
+            const p0 = document.createElementNS(svgNs, 'circle');
+            p0.setAttribute('r', '4');
+            p0.setAttribute('fill', '#94a3b8');
+            const p3 = document.createElementNS(svgNs, 'circle');
+            p3.setAttribute('r', '4');
+            p3.setAttribute('fill', '#94a3b8');
+
+            const h1 = document.createElementNS(svgNs, 'circle');
+            h1.setAttribute('class', 'bezier-handle');
+            h1.setAttribute('r', '7');
+            h1.dataset.handle = '1';
+            const h2 = document.createElementNS(svgNs, 'circle');
+            h2.setAttribute('class', 'bezier-handle');
+            h2.setAttribute('r', '7');
+            h2.dataset.handle = '2';
+
+            svg.append(grid, diag, line1, line2, curve, p0, p3, h1, h2);
+            graphWrap.appendChild(svg);
+
+            const cssRow = document.createElement('label');
+            cssRow.className = 'bezier-css-row';
+            cssRow.textContent = 'Zápis ';
+            const cssIn = document.createElement('input');
+            cssIn.type = 'text';
+            cssIn.spellcheck = false;
+            cssIn.autocomplete = 'off';
+            cssRow.appendChild(cssIn);
+
+            const presetsWrap = document.createElement('div');
+            presetsWrap.className = 'bezier-presets';
+            const presetBtns = {};
+            Object.entries(INTERP_BEZIER_PRESETS).forEach(([id, { label, v }]) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = label;
+                btn.dataset.preset = id;
+                presetBtns[id] = btn;
+                presetsWrap.appendChild(btn);
+            });
+
+            panel.append(head, graphWrap, cssRow, presetsWrap);
+            document.body.appendChild(panel);
+
+            const commitLive = () => {
+                setInterpCurve(pal, prop, segIndex, bez);
+                applyInterpForProp(block, pal, prop);
+            };
+
+            const plot = { x: 20, y: 20, w: 180, h: 180 };
+
+            const toSvg = (bx, by) => ({
+                x: plot.x + bx * plot.w,
+                y: plot.y + (1 - by) * plot.h
+            });
+
+            const fromSvg = (sx, sy) => ({
+                x: Math.max(0, Math.min(1, (sx - plot.x) / plot.w)),
+                y: Math.max(0, Math.min(1, 1 - (sy - plot.y) / plot.h))
+            });
+
+            const curvePath = () => {
+                const a = toSvg(0, 0);
+                const b = toSvg(bez[0], bez[1]);
+                const c = toSvg(bez[2], bez[3]);
+                const d = toSvg(1, 1);
+                return `M ${a.x} ${a.y} C ${b.x} ${b.y}, ${c.x} ${c.y}, ${d.x} ${d.y}`;
+            };
+
+            const updatePresetActive = () => {
+                Object.entries(INTERP_BEZIER_PRESETS).forEach(([id, { v }]) => {
+                    const match = v.every((n, i) => Math.abs(n - bez[i]) < 0.001);
+                    presetBtns[id].classList.toggle('active', match);
+                });
+            };
+
+            const redraw = () => {
+                const s = toSvg(0, 0);
+                const e = toSvg(1, 1);
+                const c1 = toSvg(bez[0], bez[1]);
+                const c2 = toSvg(bez[2], bez[3]);
+                diag.setAttribute('x1', String(s.x));
+                diag.setAttribute('y1', String(s.y));
+                diag.setAttribute('x2', String(e.x));
+                diag.setAttribute('y2', String(e.y));
+                line1.setAttribute('x1', String(s.x));
+                line1.setAttribute('y1', String(s.y));
+                line1.setAttribute('x2', String(c1.x));
+                line1.setAttribute('y2', String(c1.y));
+                line2.setAttribute('x1', String(c2.x));
+                line2.setAttribute('y1', String(c2.y));
+                line2.setAttribute('x2', String(e.x));
+                line2.setAttribute('y2', String(e.y));
+                p0.setAttribute('cx', String(s.x));
+                p0.setAttribute('cy', String(s.y));
+                p3.setAttribute('cx', String(e.x));
+                p3.setAttribute('cy', String(e.y));
+                h1.setAttribute('cx', String(c1.x));
+                h1.setAttribute('cy', String(c1.y));
+                h2.setAttribute('cx', String(c2.x));
+                h2.setAttribute('cy', String(c2.y));
+                curve.setAttribute('d', curvePath());
+                cssIn.value = formatBezierCss(bez);
+                updatePresetActive();
+                commitLive();
+            };
+
+            let dragHandle = null;
+
+            const onHandlePointerDown = (e, idx) => {
+                if (e.button !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                dragHandle = idx;
+                (e.currentTarget).setPointerCapture(e.pointerId);
+            };
+
+            const onSvgPointerMove = (e) => {
+                if (dragHandle == null) return;
+                const pt = svg.createSVGPoint();
+                pt.x = e.clientX;
+                pt.y = e.clientY;
+                const ctm = svg.getScreenCTM();
+                if (!ctm) return;
+                const loc = pt.matrixTransform(ctm.inverse());
+                const { x, y } = fromSvg(loc.x, loc.y);
+                if (dragHandle === 1) {
+                    bez[0] = x;
+                    bez[1] = y;
+                } else {
+                    bez[2] = x;
+                    bez[3] = y;
+                }
+                redraw();
+            };
+
+            const endDrag = () => { dragHandle = null; };
+
+            h1.addEventListener('pointerdown', e => onHandlePointerDown(e, 1));
+            h2.addEventListener('pointerdown', e => onHandlePointerDown(e, 2));
+            svg.addEventListener('pointermove', onSvgPointerMove);
+            svg.addEventListener('pointerup', endDrag);
+            svg.addEventListener('lostpointercapture', endDrag);
+
+            cssIn.oninput = () => {
+                const parsed = parseBezierInput(cssIn.value);
+                if (!parsed) return;
+                bez = parsed;
+                redraw();
+            };
+            cssIn.onkeydown = (e) => {
+                if (e.key === 'Enter') cssIn.blur();
+            };
+
+            presetsWrap.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-preset]');
+                if (!btn) return;
+                const preset = INTERP_BEZIER_PRESETS[btn.dataset.preset];
+                if (!preset) return;
+                bez = preset.v.slice();
+                redraw();
+            });
+
+            closeBtn.onclick = () => closeBezierEditor();
+            panel.addEventListener('pointerdown', (e) => e.stopPropagation());
+
+            let panelDrag = null;
+            head.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0 || e.target.closest('.bezier-editor-close')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const rect = panel.getBoundingClientRect();
+                panelDrag = {
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    left: rect.left,
+                    top: rect.top
+                };
+                head.classList.add('is-dragging');
+                head.setPointerCapture(e.pointerId);
+            });
+            head.addEventListener('pointermove', (e) => {
+                if (!panelDrag) return;
+                panel.style.left = (panelDrag.left + e.clientX - panelDrag.startX) + 'px';
+                panel.style.top = (panelDrag.top + e.clientY - panelDrag.startY) + 'px';
+            });
+            const endPanelDrag = () => {
+                panelDrag = null;
+                head.classList.remove('is-dragging');
+            };
+            head.addEventListener('pointerup', endPanelDrag);
+            head.addEventListener('lostpointercapture', endPanelDrag);
+
+            const onKey = (e) => {
+                if (e.key === 'Escape') closeBezierEditor();
+            };
+            const onDocPointerDown = (e) => {
+                if (panel.contains(e.target) || anchor.contains(e.target)) return;
+                closeBezierEditor();
+            };
+            document.addEventListener('keydown', onKey);
+            document.addEventListener('pointerdown', onDocPointerDown, true);
+
+            bezierEditorOpen = { panel, onKey, onDocPointerDown, block, key: editorKey };
+            redraw();
+            positionFloatingPanel(panel, anchor);
+            requestAnimationFrame(() => positionFloatingPanel(panel, anchor));
+        }
+
+        function applyDmGainStep(pal, i) {
+            const step = pal.steps[i];
+            if (!step || !pal.dmBaseL) return;
+            const base = pal.dmBaseL[i];
+            if (base == null) return;
+            step.l = clampSliderVal('l', base + dmGainAtIndex(pal, i));
+            step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
+        }
+
+        function applyDmGainAll(pal) {
+            if (!pal.darkMode || !pal.dmBaseL?.length) return;
+            pal.steps.forEach((_, i) => applyDmGainStep(pal, i));
+        }
+
+        function commitDarkModeBaseL(pal, i, baseL) {
+            if (!pal.dmBaseL) pal.dmBaseL = [];
+            pal.dmBaseL[i] = clampSliderVal('l', baseL);
+            applyDmGainStep(pal, i);
+        }
+
+        function recalcStepsLForDarkMode(pal) {
+            if (!pal.darkMode || !pal.darkModeWcagTargets?.length) return;
+            if (!hexToRgb(pal.bgHex)) return;
+            pal.steps.forEach((step, i) => {
+                const target = pal.darkModeWcagTargets[i];
+                if (target == null) return;
+                const baseL = solveLForWcag(step.h, step.s, target, pal.bgHex, step.l);
+                commitDarkModeBaseL(pal, i, baseL);
+            });
+        }
+
+        function captureDarkModeWcagTargets(pal) {
+            const primary = palettes[0];
+            if (!primary) return;
+            const refBg = primary.bgHex;
+            if (!hexToRgb(refBg)) return;
+            pal.darkModeRefBg = refBg;
+            pal.darkModeWcagTargets = pal.steps.map((_, i) => {
+                const pi = Math.min(i, primary.steps.length - 1);
+                return calcWcagRatio(primary.steps[pi].hex, refBg);
+            });
+        }
+
+        function primaryStepSnapAt(i) {
+            const primary = palettes[0];
+            const pi = Math.min(i, primary.steps.length - 1);
+            const s = primary.steps[pi];
+            return { h: s.h, s: s.s, l: s.l };
+        }
+
+        function primarySnapEqual(a, b) {
+            if (!a || !b) return false;
+            return Math.round(a.h) === Math.round(b.h) &&
+                Math.round(a.s * 10) === Math.round(b.s * 10) &&
+                Math.round(a.l * 10) === Math.round(b.l * 10);
+        }
+
+        function rememberDarkModePrimarySnap(pal, i) {
+            if (!pal.dmPrimarySnap) pal.dmPrimarySnap = [];
+            pal.dmPrimarySnap[i] = primaryStepSnapAt(i);
+        }
+
+        function syncDarkModeStepFromPrimary(pal, i) {
+            const primary = palettes[0];
+            if (!primary || !pal.steps[i]) return;
+            const pi = Math.min(i, primary.steps.length - 1);
+            const pStep = primary.steps[pi];
+            const step = pal.steps[i];
+            step.h = pStep.h;
+            step.s = pStep.s;
+            if (!pal.darkModeWcagTargets?.length) captureDarkModeWcagTargets(pal);
+            const refBg = pal.darkModeRefBg || primary.bgHex;
+            pal.darkModeWcagTargets[i] = calcWcagRatio(pStep.hex, refBg);
+            const baseL = solveLForWcag(step.h, step.s, pal.darkModeWcagTargets[i], pal.bgHex, step.l);
+            commitDarkModeBaseL(pal, i, baseL);
+            rememberDarkModePrimarySnap(pal, i);
+        }
+
+        function recalcDarkModeStepL(pal, i) {
+            const step = pal.steps[i];
+            const target = pal.darkModeWcagTargets?.[i];
+            if (!step || target == null || !hexToRgb(pal.bgHex)) return;
+            const hintL = pal.dmBaseL?.[i] ?? step.l;
+            const baseL = solveLForWcag(step.h, step.s, target, pal.bgHex, hintL);
+            commitDarkModeBaseL(pal, i, baseL);
+        }
+
+        function syncDarkModePaletteFromPrimary(pal, full = false) {
+            if (!pal.darkMode || isPrimaryPalette(pal)) return;
+            const primary = palettes[0];
+            if (!primary || !hexToRgb(primary.bgHex)) return;
+
+            const bg = primary.bgHex;
+            const bgChanged = full || pal.dmPrimaryBgSnap !== bg;
+            const lenMismatch = !pal.dmPrimarySnap?.length ||
+                pal.dmPrimarySnap.length !== pal.steps.length;
+
+            if (full || lenMismatch) {
+                pal.darkModeRefBg = bg;
+                captureDarkModeWcagTargets(pal);
+                pal.steps.forEach((_, i) => syncDarkModeStepFromPrimary(pal, i));
+                pal.dmPrimaryBgSnap = bg;
+            } else {
+                if (bgChanged) {
+                    pal.darkModeRefBg = bg;
+                    captureDarkModeWcagTargets(pal);
+                    pal.dmPrimaryBgSnap = bg;
+                }
+                pal.steps.forEach((_, i) => {
+                    const stepChanged = !primarySnapEqual(pal.dmPrimarySnap[i], primaryStepSnapAt(i));
+                    if (stepChanged) {
+                        syncDarkModeStepFromPrimary(pal, i);
+                    } else if (bgChanged) {
+                        recalcDarkModeStepL(pal, i);
+                    }
+                });
+            }
+
+            const block = getPaletteBlockForPal(pal);
+            if (block) applyDarkModeUi(block, pal, getToolbarBgInput(block));
+        }
+
+        function syncAllDarkModeFromPrimary() {
+            for (let i = 1; i < palettes.length; i++) {
+                const pal = palettes[i];
+                if (pal.darkMode) syncDarkModePaletteFromPrimary(pal);
+            }
+        }
+
+        function afterPrimaryPaletteChange() {
+            syncAllDarkModeFromPrimary();
+        }
+
+        function updateDmGainVisibility(block, pal) {
+            const field = block.querySelector('.dm-gain-field');
+            if (!field) return;
+            const show = !!pal.darkMode;
+            field.hidden = !show;
+            field.classList.toggle('dm-gain-hidden', !show);
+        }
+
+        function syncDmGainUi(block, pal) {
+            const wrap = block.querySelector('.slider-ramp-wrap[data-prop="gain"]');
+            if (!wrap) return;
+            updateDmGainVisibility(block, pal);
+            if (!pal.darkMode) return;
+            wrap.classList.toggle('ramp-mode', !!pal.dmGainRamp);
+            if (pal.dmGainRamp) {
+                const b = getInterpCurve(pal, 'gain', 0);
+                const linear = b.every((v, i) => Math.abs(v - INTERP_BEZIER_LINEAR[i]) < 0.001);
+                wrap.title = linear
+                    ? 'Alt+klik: rampa začátek–konec. Pravý klik: křivka interpolace.'
+                    : `Rampa (${formatBezierCss(b)}). Pravý klik: křivka interpolace.`;
+            } else {
+                wrap.title = 'Alt+klik: rampa začátek–konec';
+            }
+            if (!pal.dmGainRamp) {
+                hideRampHints(wrap);
+                wrap.querySelector('.ramp-single').value = pal.dmGain ?? 0;
+                setValDisplay(block, pal, 'gain', [String(pal.dmGain ?? 0)]);
+            } else {
+                wrap.querySelector('.ramp-min').value = pal.dmGainStart ?? 0;
+                wrap.querySelector('.ramp-max').value = pal.dmGainEnd ?? 0;
+                setValDisplay(block, pal, 'gain',
+                    [String(pal.dmGainStart ?? 0), String(pal.dmGainEnd ?? 0)], '–');
+            }
+            updateSliderTrack(block, pal, 'gain');
+            const valWrap = block.querySelector('.val-wrap[data-prop="gain"]');
+            if (valWrap) valWrap.classList.toggle('val-editable', pal.darkMode);
+        }
+
+        function applyDarkModeUi(block, pal, bgInput) {
+            const bgIn = bgInput ?? getToolbarBgInput(block);
+            if (bgIn) bgIn.value = toolbarHexDisplay(pal.bgHex);
+            syncToolbarBgSwatch(block, pal);
+            applyBgPreview(block, pal);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
+            syncDmGainUi(block, pal);
+        }
+
+        function setDarkMode(block, pal, on, bgInput, darkBtn) {
+            if (on) {
+                pal.darkMode = true;
+                pal.bgHex = '#000000';
+                syncDarkModePaletteFromPrimary(pal, true);
+            } else {
+                pal.darkMode = false;
+                pal.darkModeWcagTargets = null;
+                pal.darkModeRefBg = null;
+                pal.dmPrimarySnap = null;
+                pal.dmPrimaryBgSnap = null;
+                pal.dmBaseL = null;
+            }
+            if (darkBtn) darkBtn.classList.toggle('active', pal.darkMode);
+            updateDmGainVisibility(block, pal);
+            applyDarkModeUi(block, pal, bgInput);
+        }
+
+        function onDmGainSlider(block, pal, raw) {
+            if (!pal.darkMode) return;
+            pal.dmGain = clampGain(parseFloat(raw));
+            const wrap = block.querySelector('.slider-ramp-wrap[data-prop="gain"]');
+            if (wrap) wrap.querySelector('.ramp-single').value = pal.dmGain;
+            applyDmGainAll(pal);
+            syncDmGainUi(block, pal);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
+        }
+
+        function onDmGainRampSlider(block, pal, which, raw) {
+            if (!pal.darkMode) return;
+            const v = clampGain(parseFloat(raw));
+            const wrap = block.querySelector('.slider-ramp-wrap[data-prop="gain"]');
+            if (!wrap) return;
+            if (which === 'min') pal.dmGainStart = v;
+            else pal.dmGainEnd = v;
+            wrap.querySelector('.ramp-min').value = pal.dmGainStart;
+            wrap.querySelector('.ramp-max').value = pal.dmGainEnd;
+            applyDmGainAll(pal);
+            syncDmGainUi(block, pal);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
+        }
+
+        function toggleDmGainRamp(block, pal) {
+            if (!pal.darkMode) return;
+            pal.dmGainRamp = !pal.dmGainRamp;
+            if (pal.dmGainRamp) {
+                const g = pal.dmGain ?? 0;
+                pal.dmGainStart = g;
+                pal.dmGainEnd = g;
+                ensureInterpCurve(pal, 'gain', 0);
+            } else {
+                pal.dmGain = clampGain((pal.dmGainStart + pal.dmGainEnd) / 2);
+            }
+            applyDmGainAll(pal);
+            syncDmGainUi(block, pal);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
         }
 
         function copyHex(el, hex) {
@@ -1043,6 +2623,7 @@
                 if (pal.lInterp) applyLInterp(pal);
             });
             render();
+            afterPrimaryPaletteChange();
         }
 
         function updateStepCountLabels() {
@@ -1064,7 +2645,20 @@
                 hRamp: false,
                 sRamp: false,
                 lInterp: false,
-                lInterpPinView: false
+                lInterpPinView: false,
+                valEdit: null,
+                darkMode: false,
+                darkModeWcagTargets: null,
+                darkModeRefBg: null,
+                dmPrimarySnap: null,
+                dmPrimaryBgSnap: null,
+                dmGain: 0,
+                dmGainRamp: false,
+                dmGainStart: 0,
+                dmGainEnd: 0,
+                dmGainBezier: [0, 0, 1, 1],
+                interpCurves: {},
+                dmBaseL: null
             };
         }
 
@@ -1089,9 +2683,11 @@
                 const i1 = anchors[a + 1];
                 const l0 = pal.steps[i0].l;
                 const l1 = pal.steps[i1].l;
+                const bez = getInterpCurve(pal, 'l', a);
                 for (let i = i0 + 1; i < i1; i++) {
                     const t = (i - i0) / (i1 - i0);
-                    pal.steps[i].l = l0 + (l1 - l0) * t;
+                    const e = sampleInterpBezier(t, bez);
+                    pal.steps[i].l = l0 + (l1 - l0) * e;
                 }
             }
             refreshStepHex(pal);
@@ -1104,6 +2700,7 @@
 
         function enterLInterp(block, pal) {
             pal.lInterp = true;
+            ensureInterpCurvesForPalette(pal, 'l');
             const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
             if (!wrap) return;
             if (useLPinHandles(pal)) {
@@ -1117,6 +2714,7 @@
             applyLInterp(pal);
             syncEditor(block, pal);
             updateSwatches(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
         function setLInterpPinView(block, pal, withPins) {
@@ -1125,6 +2723,7 @@
             const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
             if (!wrap) return;
             if (withPins) {
+                ensureInterpCurvesForPalette(pal, 'l');
                 renderLPinMarkers(block, pal);
                 applyAnchorInterpL(pal);
             } else {
@@ -1136,12 +2735,13 @@
             }
             syncEditor(block, pal);
             updateSwatches(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
         function updateLPinValDisplay(block, pal) {
             const anchors = getPinnedIndices(pal);
-            block.querySelector('.val-l').textContent =
-                anchors.map(i => pal.steps[i].l.toFixed(1)).join(' · ');
+            setValDisplay(block, pal, 'l',
+                anchors.map(i => pal.steps[i].l.toFixed(1)), '·');
         }
 
         function renderLPinMarkers(block, pal) {
@@ -1221,6 +2821,7 @@
             updateLPinValDisplay(block, pal);
             updateSliderTrack(block, pal, 'l');
             updateSwatches(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
         function applyPropRamp(pal, prop) {
@@ -1228,9 +2829,11 @@
             if (n < 2) return;
             const start = pal.steps[0][prop];
             const end = pal.steps[n - 1][prop];
+            const bez = getInterpCurve(pal, prop, 0);
             for (let i = 0; i < n; i++) {
                 const t = i / (n - 1);
-                pal.steps[i][prop] = start + (end - start) * t;
+                const e = sampleInterpBezier(t, bez);
+                pal.steps[i][prop] = start + (end - start) * e;
                 pal.steps[i].hex = modelToHex(pal.steps[i].h, pal.steps[i].s, pal.steps[i].l) ?? pal.steps[i].hex;
             }
         }
@@ -1265,10 +2868,14 @@
                 const h1 = pal.steps[i1].h;
                 const s0 = pal.steps[i0].s;
                 const s1 = pal.steps[i1].s;
+                const bezH = getInterpCurve(pal, 'h', a);
+                const bezS = getInterpCurve(pal, 's', a);
                 for (let i = i0 + 1; i < i1; i++) {
                     const t = (i - i0) / (i1 - i0);
-                    pal.steps[i].h = h0 + (h1 - h0) * t;
-                    pal.steps[i].s = s0 + (s1 - s0) * t;
+                    const eH = sampleInterpBezier(t, bezH);
+                    const eS = sampleInterpBezier(t, bezS);
+                    pal.steps[i].h = h0 + (h1 - h0) * eH;
+                    pal.steps[i].s = s0 + (s1 - s0) * eS;
                 }
             }
             refreshStepHex(pal);
@@ -1283,10 +2890,6 @@
 
         function canEditStepHex(pal, step) {
             return !isAnchorMode(pal) || !!step.pinned;
-        }
-
-        function sanitizeHexInput(raw) {
-            return raw.replace(/#/g, '').replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
         }
 
         function applyStepFromHex(block, pal, index, raw) {
@@ -1306,6 +2909,7 @@
             if (isAnchorMode(pal)) applyAnchorInterp(pal);
             updateSwatches(block, pal);
             syncEditor(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
             return true;
         }
 
@@ -1355,6 +2959,7 @@
             if (pal.lInterp) applyLInterp(pal);
             updateSwatches(block, pal);
             syncEditor(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
         function findClosestStepIdx(steps, seed) {
@@ -1387,6 +2992,7 @@
             pal.sRamp = false;
             pal.lInterp = false;
             pal.lInterpPinView = false;
+            pal.valEdit = null;
             pal.hexEditIndex = null;
             clearAllPins(pal);
 
@@ -1710,6 +3316,7 @@
 
         function refreshPaletteSliderTracks(block, pal) {
             ['h', 's', 'l'].forEach(prop => updateSliderTrack(block, pal, prop));
+            if (pal.darkMode) updateSliderTrack(block, pal, 'gain');
             const lWrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
             if (lWrap?.classList.contains('l-pin-ramp-mode')) {
                 updateLPinMarkerPositions(block, pal);
@@ -1888,6 +3495,7 @@
             updateSliderMode(block, pal);
             updateEditorSliderClasses(block, pal);
             updateSliderInactive(block, pal);
+            updateValEditableState(block, pal);
 
             if (pal.selected === null) {
                 const ref = pal.steps[0];
@@ -1898,18 +3506,18 @@
                     if (useLPinHandles(pal)) {
                         const anchors = getPinnedIndices(pal);
                         const vals = anchors.map(i => pal.steps[i].l);
-                        block.querySelector('.val-l').textContent =
-                            vals.map(v => v.toFixed(1)).join(' · ');
+                        setValDisplay(block, pal, 'l',
+                            vals.map(v => v.toFixed(1)), '·');
                     } else {
                         const { start, end } = rampSliderValues(pal, 'l');
                         const lWrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
                         lWrap.querySelector('.ramp-min').value = start;
                         lWrap.querySelector('.ramp-max').value = end;
-                        block.querySelector('.val-l').textContent =
-                            `${start.toFixed(1)} – ${end.toFixed(1)}`;
+                        setValDisplay(block, pal, 'l',
+                            [start.toFixed(1), end.toFixed(1)], '–');
                     }
                 } else {
-                    block.querySelector('.val-l').textContent = ref.l.toFixed(1);
+                    setValDisplay(block, pal, 'l', [ref.l.toFixed(1)]);
                 }
                 updateSliderTrack(block, pal, 'l');
 
@@ -1918,12 +3526,12 @@
                     const wrap = block.querySelector('.slider-ramp-wrap[data-prop="h"]');
                     wrap.querySelector('.ramp-min').value = start;
                     wrap.querySelector('.ramp-max').value = end;
-                    block.querySelector('.val-h').textContent =
-                        `${Math.round(start)}° – ${Math.round(end)}°`;
+                    setValDisplay(block, pal, 'h',
+                        [`${Math.round(start)}°`, `${Math.round(end)}°`], '–');
                     updateSliderTrack(block, pal, 'h');
                 } else {
                     block.querySelector('.input-h').value = ref.h;
-                    block.querySelector('.val-h').textContent = Math.round(ref.h) + '°';
+                    setValDisplay(block, pal, 'h', [`${Math.round(ref.h)}°`]);
                     updateSliderTrack(block, pal, 'h');
                 }
 
@@ -1932,12 +3540,12 @@
                     const wrap = block.querySelector('.slider-ramp-wrap[data-prop="s"]');
                     wrap.querySelector('.ramp-min').value = start;
                     wrap.querySelector('.ramp-max').value = end;
-                    block.querySelector('.val-s').textContent =
-                        `${start.toFixed(1)} – ${end.toFixed(1)}`;
+                    setValDisplay(block, pal, 's',
+                        [start.toFixed(1), end.toFixed(1)], '–');
                     updateSliderTrack(block, pal, 's');
                 } else {
                     block.querySelector('.input-s').value = ref.s;
-                    block.querySelector('.val-s').textContent = ref.s.toFixed(1);
+                    setValDisplay(block, pal, 's', [ref.s.toFixed(1)]);
                     updateSliderTrack(block, pal, 's');
                 }
                 return;
@@ -1948,9 +3556,9 @@
             block.querySelector('.input-h').value = step.h;
             block.querySelector('.input-s').value = step.s;
             inputL.value = step.l;
-            block.querySelector('.val-h').textContent = Math.round(step.h) + '°';
-            block.querySelector('.val-s').textContent = step.s.toFixed(1);
-            block.querySelector('.val-l').textContent = step.l.toFixed(1);
+            setValDisplay(block, pal, 'h', [`${Math.round(step.h)}°`]);
+            setValDisplay(block, pal, 's', [step.s.toFixed(1)]);
+            setValDisplay(block, pal, 'l', [step.l.toFixed(1)]);
             updateSliderTrack(block, pal, 'h');
             updateSliderTrack(block, pal, 's');
             updateSliderTrack(block, pal, 'l');
@@ -1961,6 +3569,7 @@
             const key = prop === 'h' ? 'hRamp' : 'sRamp';
             pal[key] = !pal[key];
             if (pal[key]) {
+                ensureInterpCurvesForPalette(pal, prop);
                 setSelection(pal, null);
                 applyPropRamp(pal, prop);
             } else {
@@ -1968,6 +3577,7 @@
             }
             syncEditor(block, pal);
             updateSwatches(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
         function onRampSlider(block, pal, prop, which, raw) {
@@ -1999,13 +3609,182 @@
             }
             syncEditor(block, pal);
             updateSwatches(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
+        }
+
+        function endValEditDom(block, pal) {
+            block?.querySelectorAll('.val-input').forEach(el => el.remove());
+            if (pal) pal.valEdit = null;
+        }
+
+        function canEditSliderVal(block, pal, prop) {
+            if (prop === 'gain') return pal.darkMode;
+            const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
+            if (!wrap || wrap.classList.contains('slider-inactive')) return false;
+            if (prop === 'l' && pal.selected === null && !pal.lInterp) return false;
+            const anchorMode = isAnchorMode(pal);
+            const sel = pal.selected;
+            const step = sel != null ? pal.steps[sel] : null;
+            if ((prop === 'h' || prop === 's') && anchorMode && (sel === null || !step?.pinned)) {
+                return false;
+            }
+            return true;
+        }
+
+        function isValEditingProp(pal, prop) {
+            return pal.valEdit != null && pal.valEdit.prop === prop;
+        }
+
+        function clampSliderVal(prop, n) {
+            if (prop === 'gain') return clampGain(n);
+            if (prop === 'h') return Math.round(Math.max(0, Math.min(360, n)));
+            return Math.round(Math.max(0, Math.min(100, n)) * 10) / 10;
+        }
+
+        function renderValSegments(block, pal, prop, parts, sep) {
+            const wrap = block.querySelector(`.val-wrap[data-prop="${prop}"]`);
+            if (!wrap) return;
+            wrap.replaceChildren();
+            parts.forEach((text, idx) => {
+                if (idx > 0 && sep) {
+                    const sepEl = document.createElement('span');
+                    sepEl.className = 'val-sep';
+                    sepEl.textContent = ` ${sep} `;
+                    wrap.appendChild(sepEl);
+                }
+                const seg = document.createElement('span');
+                seg.className = 'val-segment';
+                seg.dataset.idx = String(idx);
+                seg.textContent = text;
+                wrap.appendChild(seg);
+            });
+        }
+
+        function setValDisplay(block, pal, prop, parts, sep = null) {
+            if (isValEditingProp(pal, prop)) return;
+            const arr = Array.isArray(parts) ? parts : [parts];
+            const multi = arr.length > 1;
+            renderValSegments(block, pal, prop, arr, multi ? sep : null);
+        }
+
+        function updateValEditableState(block, pal) {
+            ['h', 's', 'l', 'gain'].forEach(prop => {
+                const wrap = block.querySelector(`.val-wrap[data-prop="${prop}"]`);
+                if (wrap) wrap.classList.toggle('val-editable', canEditSliderVal(block, pal, prop));
+            });
+        }
+
+        function applyValSegment(block, pal, prop, idx, raw) {
+            const n = parseFloat(String(raw).replace(/°/g, '').trim());
+            if (Number.isNaN(n)) return false;
+            const v = clampSliderVal(prop, n);
+
+            if (prop === 'h') {
+                if (pal.selected === null && pal.hRamp) {
+                    onRampSlider(block, pal, 'h', idx === 0 ? 'min' : 'max', String(v));
+                    return true;
+                }
+                onSlider(block, pal, 'h', String(v));
+                return true;
+            }
+            if (prop === 's') {
+                if (pal.selected === null && pal.sRamp) {
+                    onRampSlider(block, pal, 's', idx === 0 ? 'min' : 'max', String(v));
+                    return true;
+                }
+                onSlider(block, pal, 's', String(v));
+                return true;
+            }
+            if (prop === 'l') {
+                if (pal.lInterp && useLPinHandles(pal)) {
+                    onLPinSlider(block, pal, idx, String(v));
+                    return true;
+                }
+                if (pal.lInterp) {
+                    onRampSlider(block, pal, 'l', idx === 0 ? 'min' : 'max', String(v));
+                    return true;
+                }
+                onSlider(block, pal, 'l', String(v));
+                return true;
+            }
+            if (prop === 'gain') {
+                if (pal.dmGainRamp) {
+                    onDmGainRampSlider(block, pal, idx === 0 ? 'min' : 'max', String(v));
+                } else {
+                    onDmGainSlider(block, pal, String(v));
+                }
+                return true;
+            }
+            return false;
+        }
+
+        function startValEdit(block, pal, prop, idx) {
+            if (!canEditSliderVal(block, pal, prop)) return;
+            endValEditDom(block, pal);
+            const valWrap = block.querySelector(`.val-wrap[data-prop="${prop}"]`);
+            const seg = valWrap?.querySelector(`.val-segment[data-idx="${idx}"]`);
+            if (!valWrap || !seg) return;
+
+            pal.valEdit = { prop, idx };
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'val-input';
+            input.value = seg.textContent.replace(/°/g, '').trim();
+            input.spellcheck = false;
+            input.autocomplete = 'off';
+            input.inputMode = 'decimal';
+
+            let done = false;
+            const teardown = () => {
+                if (done) return;
+                done = true;
+                input.remove();
+                pal.valEdit = null;
+            };
+            const commit = () => {
+                if (done) return;
+                const raw = input.value;
+                teardown();
+                if (!applyValSegment(block, pal, prop, idx, raw)) {
+                    syncEditor(block, pal);
+                }
+            };
+            const cancel = () => {
+                teardown();
+                syncEditor(block, pal);
+            };
+
+            input.addEventListener('keydown', (e) => {
+                e.stopPropagation();
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    commit();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancel();
+                }
+            });
+            input.addEventListener('blur', () => {
+                requestAnimationFrame(() => {
+                    if (done) return;
+                    commit();
+                });
+            });
+            input.addEventListener('click', (e) => e.stopPropagation());
+            input.addEventListener('pointerdown', (e) => e.stopPropagation());
+
+            seg.appendChild(input);
+            input.focus();
+            input.select();
         }
 
         function deselectPalette(block, pal) {
             const hadSel = pal.selected !== null;
             const hadEdit = pal.hexEditIndex != null;
-            if (!hadSel && !hadEdit) return;
+            const hadValEdit = pal.valEdit != null;
+            if (!hadSel && !hadEdit && !hadValEdit) return;
             cancelHexEdit(pal);
+            endValEditDom(block, pal);
             setSelection(pal, null);
             updateSwatches(block, pal);
             syncEditor(block, pal);
@@ -2024,7 +3803,15 @@
                 const step = pal.steps[pal.selected];
                 if (prop === 'l') {
                     exitLInterp(pal);
-                    step.l = v;
+                    if (pal.darkMode) {
+                        const si = pal.selected;
+                        const g = dmGainAtIndex(pal, si);
+                        if (!pal.dmBaseL) pal.dmBaseL = [];
+                        pal.dmBaseL[si] = clampSliderVal('l', v - g);
+                        step.l = clampSliderVal('l', pal.dmBaseL[si] + g);
+                    } else {
+                        step.l = v;
+                    }
                     step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
                 } else if (anchorMode) {
                     if (!step.pinned) return;
@@ -2037,6 +3824,7 @@
             }
             syncEditor(block, pal);
             updateSwatches(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
         function buildPaletteBlock(pal, pi) {
@@ -2049,22 +3837,25 @@
 
             const paletteField = document.createElement('label');
             paletteField.className = 'toolbar-field';
-            paletteField.textContent = 'Barva palety';
+            paletteField.append('Barva palety');
+            const paletteWrap = document.createElement('div');
+            paletteWrap.className = 'input-with-swatch';
             const hexInput = document.createElement('input');
             hexInput.type = 'text';
-            hexInput.placeholder = '#RRGGBB';
-            hexInput.value = pal.baseHex;
-            paletteField.appendChild(hexInput);
+            hexInput.placeholder = 'RRGGBB';
+            hexInput.value = toolbarHexDisplay(pal.baseHex);
+            paletteWrap.appendChild(hexInput);
+            paletteField.appendChild(paletteWrap);
 
             const bgField = document.createElement('label');
             bgField.className = 'toolbar-field';
             bgField.append('Barva pozadí');
             const bgWrap = document.createElement('div');
-            bgWrap.className = 'input-with-eye';
+            bgWrap.className = 'input-with-swatch has-extra';
             const bgInput = document.createElement('input');
             bgInput.type = 'text';
-            bgInput.placeholder = '#RRGGBB';
-            bgInput.value = pal.bgHex;
+            bgInput.placeholder = 'RRGGBB';
+            bgInput.value = toolbarHexDisplay(pal.bgHex);
             const bgEye = document.createElement('button');
             bgEye.type = 'button';
             bgEye.className = 'bg-eye' + (pal.bgPreview ? ' active' : '');
@@ -2078,39 +3869,193 @@
             bgWrap.append(bgInput, bgEye);
             bgField.appendChild(bgWrap);
 
+            attachToolbarColorSwatch(hexInput, (hex) => {
+                pal.baseHex = hex;
+            });
+            attachToolbarColorSwatch(
+                bgInput,
+                (hex) => {
+                    pal.bgHex = hex;
+                    applyBgPreview(block, pal);
+                },
+                () => commitToolbarBgChange(block, pal, pi)
+            );
+            wireToolbarHexInput(hexInput, (hex) => { pal.baseHex = hex; });
+            let bgHexCommitTimer = 0;
+            wireToolbarHexInput(bgInput, (hex) => {
+                pal.bgHex = hex;
+                applyBgPreview(block, pal);
+                syncToolbarBgSwatch(block, pal);
+                clearTimeout(bgHexCommitTimer);
+                bgHexCommitTimer = setTimeout(
+                    () => commitToolbarBgChange(block, pal, pi),
+                    150
+                );
+            });
+
             const generateBtn = document.createElement('button');
             generateBtn.type = 'button';
             generateBtn.textContent = 'Generovat paletu';
 
             generateBtn.onclick = () => {
-                pal.baseHex = hexInput.value.trim();
-                pal.bgHex = bgInput.value.trim();
+                const baseNorm = normalizeHex(hexInput.value);
+                const bgNorm = normalizeHex(bgInput.value);
+                if (!baseNorm) {
+                    hexInput.classList.add('error');
+                    setTimeout(() => hexInput.classList.remove('error'), 600);
+                    return;
+                }
+                if (!bgNorm) {
+                    bgInput.classList.add('error');
+                    setTimeout(() => bgInput.classList.remove('error'), 600);
+                    return;
+                }
+                pal.baseHex = baseNorm;
+                pal.bgHex = bgNorm;
+                hexInput.value = baseNorm.slice(1);
+                bgInput.value = bgNorm.slice(1);
                 if (!hexToModel(pal.baseHex)) {
                     hexInput.classList.add('error');
                     setTimeout(() => hexInput.classList.remove('error'), 600);
                     return;
                 }
-                if (!hexToRgb(pal.bgHex)) {
-                    bgInput.classList.add('error');
-                    setTimeout(() => bgInput.classList.remove('error'), 600);
-                    return;
-                }
                 hexInput.classList.remove('error');
                 bgInput.classList.remove('error');
                 generatePalette(pal, true);
+                if (pal.darkMode) {
+                    syncDarkModePaletteFromPrimary(pal, true);
+                } else if (isPrimaryPalette(pal)) {
+                    afterPrimaryPaletteChange();
+                }
                 updateSwatches(block, pal);
                 syncEditor(block, pal);
                 applyBgPreview(block, pal);
             };
 
             hexInput.onkeydown = e => { if (e.key === 'Enter') generateBtn.click(); };
-            bgInput.oninput = () => {
-                pal.bgHex = bgInput.value.trim();
-                applyBgPreview(block, pal);
-                if (hexToRgb(pal.bgHex)) updateSwatches(block, pal);
-            };
+            bgInput.onkeydown = e => { if (e.key === 'Enter') generateBtn.click(); };
 
-            toolbar.append(paletteField, bgField, generateBtn);
+            if (pi > 0) {
+                const darkModeBtn = document.createElement('button');
+                darkModeBtn.type = 'button';
+                darkModeBtn.className = 'dark-mode-btn' + (pal.darkMode ? ' active' : '');
+                darkModeBtn.textContent = 'Dark Mode';
+                darkModeBtn.onclick = () => setDarkMode(block, pal, !pal.darkMode, bgInput, darkModeBtn);
+
+                const dmGainField = document.createElement('label');
+                dmGainField.className = 'toolbar-field dm-gain-field' +
+                    (pal.darkMode ? '' : ' dm-gain-hidden');
+                dmGainField.hidden = !pal.darkMode;
+                dmGainField.innerHTML = `
+                    <span class="slider-top"><span>Gain</span><span class="val-wrap" data-prop="gain"></span></span>
+                    <div class="slider-ramp-wrap" data-prop="gain" title="Alt+klik: rampa začátek–konec">
+                        <span class="ramp-hint ramp-hint-min"></span>
+                        <span class="ramp-hint ramp-hint-max"></span>
+                        <div class="track-bg"></div>
+                        <div class="track-fill"></div>
+                        <input type="range" class="input-gain ramp-single" min="0" max="100" step="1">
+                        <input type="range" class="ramp-min ramp-handle" min="0" max="100" step="1">
+                        <input type="range" class="ramp-max ramp-handle" min="0" max="100" step="1">
+                    </div>
+                `;
+                const gainWrap = dmGainField.querySelector('.slider-ramp-wrap[data-prop="gain"]');
+                const gainHintMin = gainWrap.querySelector('.ramp-hint-min');
+                const gainHintMax = gainWrap.querySelector('.ramp-hint-max');
+                if (gainHintMin) gainHintMin.textContent = 'Začátek';
+                if (gainHintMax) gainHintMax.textContent = 'Konec';
+                let gainAltClick = false;
+                let gainDragMoved = false;
+                let gainRampDrag = null;
+
+                const showGainRampHint = (which) => {
+                    if (!gainHintMin || !gainHintMax) return;
+                    gainHintMin.classList.toggle('visible', which === 'min');
+                    gainHintMax.classList.toggle('visible', which === 'max');
+                };
+
+                gainWrap.querySelectorAll('.ramp-min, .ramp-max, .input-gain').forEach(inp => {
+                    inp.addEventListener('pointerdown', (e) => {
+                        if (e.button !== 0) e.preventDefault();
+                    });
+                    inp.addEventListener('contextmenu', (e) => e.preventDefault());
+                });
+
+                gainWrap.addEventListener('pointerdown', (e) => {
+                    if (e.button !== 0) return;
+                    gainAltClick = e.altKey;
+                    gainDragMoved = false;
+                    if (e.altKey) return;
+                    if (!pal.darkMode) return;
+                    if (gainWrap.classList.contains('ramp-mode')) {
+                        e.preventDefault();
+                        gainRampDrag = pickRampHandle(gainWrap, 'gain', e.clientX);
+                        gainDragMoved = true;
+                        gainWrap.setPointerCapture(e.pointerId);
+                        onDmGainRampSlider(block, pal, gainRampDrag,
+                            String(valueFromPointer(gainWrap, 'gain', e.clientX)));
+                        return;
+                    }
+                    if (e.target.closest('input')) {
+                        const onMove = () => { gainDragMoved = true; };
+                        document.addEventListener('pointermove', onMove);
+                        document.addEventListener('pointerup', () => {
+                            document.removeEventListener('pointermove', onMove);
+                        }, { once: true });
+                    }
+                });
+                gainWrap.addEventListener('pointermove', (e) => {
+                    if (!gainWrap.classList.contains('ramp-mode')) {
+                        showGainRampHint(null);
+                        return;
+                    }
+                    if (gainRampDrag === null) {
+                        showGainRampHint(pickRampHandle(gainWrap, 'gain', e.clientX));
+                    }
+                    if (!gainRampDrag) return;
+                    onDmGainRampSlider(block, pal, gainRampDrag,
+                        String(valueFromPointer(gainWrap, 'gain', e.clientX)));
+                });
+                gainWrap.addEventListener('pointerleave', () => showGainRampHint(null));
+                gainWrap.addEventListener('pointerup', () => {
+                    gainRampDrag = null;
+                });
+                gainWrap.addEventListener('lostpointercapture', () => {
+                    gainRampDrag = null;
+                });
+                gainWrap.addEventListener('click', (e) => {
+                    if (!gainAltClick || gainDragMoved || !pal.darkMode) return;
+                    e.preventDefault();
+                    toggleDmGainRamp(block, pal);
+                });
+
+                gainWrap.addEventListener('contextmenu', (e) => {
+                    showInterpContextMenu(e, block, pal, gainWrap, 'gain');
+                });
+
+                dmGainField.querySelector('.input-gain').oninput = e =>
+                    onDmGainSlider(block, pal, e.target.value);
+                gainWrap.querySelector('.ramp-min').oninput = e =>
+                    onDmGainRampSlider(block, pal, 'min', e.target.value);
+                gainWrap.querySelector('.ramp-max').oninput = e =>
+                    onDmGainRampSlider(block, pal, 'max', e.target.value);
+
+                dmGainField.querySelector('.val-wrap[data-prop="gain"]').addEventListener('click', (e) => {
+                    const seg = e.target.closest('.val-segment');
+                    if (!seg || !pal.darkMode) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const idx = parseInt(seg.dataset.idx, 10);
+                    if (pal.valEdit?.prop === 'gain' && pal.valEdit?.idx === idx && seg.querySelector('.val-input')) {
+                        return;
+                    }
+                    startValEdit(block, pal, 'gain', idx);
+                });
+
+                toolbar.append(paletteField, bgField, generateBtn, darkModeBtn, dmGainField);
+                syncDmGainUi(block, pal);
+            } else {
+                toolbar.append(paletteField, bgField, generateBtn);
+            }
             if (pi === 0) {
                 const toolbarSpacer = document.createElement('div');
                 toolbarSpacer.className = 'toolbar-spacer';
@@ -2181,7 +4126,7 @@
             editor.innerHTML = `
                 <div class="sliders">
                     <label>
-                        <span class="slider-top"><span class="slider-axis slider-axis-h">Hue</span><span class="val val-h">0°</span></span>
+                        <span class="slider-top"><span class="slider-axis slider-axis-h">Hue</span><span class="val-wrap" data-prop="h"></span></span>
                         <div class="slider-ramp-wrap" data-prop="h" title="Alt+klik: rampa začátek–konec">
                             <span class="ramp-hint ramp-hint-min"></span>
                             <span class="ramp-hint ramp-hint-max"></span>
@@ -2193,7 +4138,7 @@
                         </div>
                     </label>
                     <label>
-                        <span class="slider-top"><span class="slider-axis slider-axis-s">Saturation</span><span class="val val-s">0</span></span>
+                        <span class="slider-top"><span class="slider-axis slider-axis-s">Saturation</span><span class="val-wrap" data-prop="s"></span></span>
                         <div class="slider-ramp-wrap" data-prop="s" title="Alt+klik: rampa začátek–konec">
                             <span class="ramp-hint ramp-hint-min"></span>
                             <span class="ramp-hint ramp-hint-max"></span>
@@ -2205,7 +4150,7 @@
                         </div>
                     </label>
                     <div class="label-l">
-                        <span class="slider-top"><span class="slider-axis slider-axis-l">Lightness</span><span class="val val-l">0</span></span>
+                        <span class="slider-top"><span class="slider-axis slider-axis-l">Lightness</span><span class="val-wrap" data-prop="l"></span></span>
                         <div class="l-slider-stack">
                             <div class="l-pin-mode-toggle">
                                 <button type="button" class="l-pin-view-btn" data-pin-view="pins">S piny</button>
@@ -2259,8 +4204,13 @@
                     hintMax.classList.toggle('visible', which === 'max');
                 };
 
+                wrap.addEventListener('contextmenu', (e) => {
+                    showInterpContextMenu(e, block, pal, wrap, prop);
+                });
+
                 wrap.addEventListener('pointerdown', (e) => {
                     if (e.target.closest('.l-interpolate-cta, .l-pin-mode-toggle')) return;
+                    if (e.button !== 0) return;
                     altClick = e.altKey;
                     dragMoved = false;
                     if (e.altKey) return;
@@ -2311,8 +4261,9 @@
                         showRampHint(null);
                         return;
                     }
-                    const hover = rampDrag || pickRampHandle(wrap, prop, e.clientX);
-                    showRampHint(hover);
+                    if (rampDrag === null) {
+                        showRampHint(pickRampHandle(wrap, prop, e.clientX));
+                    }
                     if (!rampDrag) return;
                     onRampSlider(block, pal, prop, rampDrag, String(valueFromPointer(wrap, prop, e.clientX)));
                 });
@@ -2323,13 +4274,11 @@
                 wrap.addEventListener('pointerup', () => {
                     rampDrag = null;
                     lPinDrag = null;
-                    showRampHint(null);
                     if (prop === 'l') hideLPinHints(wrap);
                 });
                 wrap.addEventListener('lostpointercapture', () => {
                     rampDrag = null;
                     lPinDrag = null;
-                    showRampHint(null);
                     if (prop === 'l') hideLPinHints(wrap);
                 });
 
@@ -2350,8 +4299,25 @@
             editor.querySelector('.input-s').oninput = e => onSlider(block, pal, 's', e.target.value);
             editor.querySelector('.input-l').oninput = e => onSlider(block, pal, 'l', e.target.value);
 
+            editor.querySelectorAll('.val-wrap[data-prop]').forEach(valWrap => {
+                const prop = valWrap.dataset.prop;
+                valWrap.addEventListener('click', (e) => {
+                    const seg = e.target.closest('.val-segment');
+                    if (!seg) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!canEditSliderVal(block, pal, prop)) return;
+                    const idx = parseInt(seg.dataset.idx, 10);
+                    if (pal.valEdit?.prop === prop && pal.valEdit?.idx === idx && seg.querySelector('.val-input')) {
+                        return;
+                    }
+                    startValEdit(block, pal, prop, idx);
+                });
+            });
+
             block.addEventListener('click', (e) => {
                 if (e.target.closest('.swatch')) return;
+                if (e.target.closest('.color-swatch-btn, .color-picker-overlay, .bezier-editor-popover, .interp-ctx-menu')) return;
                 if (e.target.closest('.palette-editor, button, input, label')) return;
                 deselectPalette(block, pal);
             });
@@ -2366,6 +4332,9 @@
         }
 
         function render() {
+            closeColorPicker();
+            closeInterpCtxMenu();
+            closeBezierEditor();
             const scrollPalettes = palettes.length > 2;
             document.body.classList.toggle('scroll-palettes', scrollPalettes);
             $('palettesContainer').replaceChildren(...palettes.map((pal, i) => buildPaletteBlock(pal, i)));
