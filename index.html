@@ -643,6 +643,34 @@
         .label-l.l-await-interp .l-interpolate-cta {
             display: block;
         }
+        .l-pin-mode-toggle {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translate(-50%, calc(-100% - 2px));
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 0.65rem;
+            z-index: 5;
+            pointer-events: auto;
+        }
+        .label-l.l-interp-on.l-has-pins .l-pin-mode-toggle {
+            display: flex;
+        }
+        .l-pin-view-btn {
+            padding: 0;
+            border: none;
+            background: none;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--accent);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .l-pin-view-btn:hover {
+            filter: brightness(1.1);
+        }
         .slider-ramp-wrap.ramp-mode,
         .slider-ramp-wrap.l-pin-ramp-mode {
             pointer-events: auto;
@@ -1035,16 +1063,22 @@
                 bgPreview: false,
                 hRamp: false,
                 sRamp: false,
-                lInterp: false
+                lInterp: false,
+                lInterpPinView: false
             };
         }
 
+        function hasPalettePins(pal) {
+            return countPinned(pal) > 0;
+        }
+
         function useLPinHandles(pal) {
-            return isAnchorMode(pal) && getPinnedIndices(pal).length > 2;
+            return pal.lInterp && !!pal.lInterpPinView && hasPalettePins(pal);
         }
 
         function exitLInterp(pal) {
             pal.lInterp = false;
+            pal.lInterpPinView = false;
         }
 
         function applyAnchorInterpL(pal) {
@@ -1077,16 +1111,29 @@
             } else {
                 const minIn = wrap.querySelector('.ramp-min');
                 const maxIn = wrap.querySelector('.ramp-max');
-                const anchors = getPinnedIndices(pal);
-                if (isAnchorMode(pal) && anchors.length >= 2) {
-                    minIn.value = pal.steps[anchors[0]].l;
-                    maxIn.value = pal.steps[anchors[anchors.length - 1]].l;
-                } else {
-                    minIn.value = pal.steps[0].l;
-                    maxIn.value = pal.steps[pal.steps.length - 1].l;
-                }
+                minIn.value = pal.steps[0].l;
+                maxIn.value = pal.steps[pal.steps.length - 1].l;
             }
             applyLInterp(pal);
+            syncEditor(block, pal);
+            updateSwatches(block, pal);
+        }
+
+        function setLInterpPinView(block, pal, withPins) {
+            if (!pal.lInterp || !hasPalettePins(pal)) return;
+            pal.lInterpPinView = withPins;
+            const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
+            if (!wrap) return;
+            if (withPins) {
+                renderLPinMarkers(block, pal);
+                applyAnchorInterpL(pal);
+            } else {
+                const minIn = wrap.querySelector('.ramp-min');
+                const maxIn = wrap.querySelector('.ramp-max');
+                minIn.value = pal.steps[0].l;
+                maxIn.value = pal.steps[pal.steps.length - 1].l;
+                applyPropRamp(pal, 'l');
+            }
             syncEditor(block, pal);
             updateSwatches(block, pal);
         }
@@ -1303,6 +1350,7 @@
                 const left = countPinned(pal);
                 if (left === 1) clearAllPins(pal);
             }
+            if (!hasPalettePins(pal)) pal.lInterpPinView = false;
             if (isAnchorMode(pal)) applyAnchorInterp(pal);
             if (pal.lInterp) applyLInterp(pal);
             updateSwatches(block, pal);
@@ -1338,6 +1386,7 @@
             pal.hRamp = false;
             pal.sRamp = false;
             pal.lInterp = false;
+            pal.lInterpPinView = false;
             pal.hexEditIndex = null;
             clearAllPins(pal);
 
@@ -1815,7 +1864,10 @@
             if (inputH) inputH.disabled = hsInactive;
             if (inputS) inputS.disabled = hsInactive;
             if (inputL) inputL.disabled = lInactive;
-            block.querySelector('.label-l')?.classList.toggle('l-await-interp', lInactive);
+            const labelL = block.querySelector('.label-l');
+            labelL?.classList.toggle('l-await-interp', lInactive);
+            labelL?.classList.toggle('l-interp-on', pal.lInterp);
+            labelL?.classList.toggle('l-has-pins', hasPalettePins(pal));
         }
 
         function updateEditorSliderClasses(block, pal) {
@@ -1931,21 +1983,12 @@
             const maxIn = wrap.querySelector('.ramp-max');
 
             if (prop === 'l') {
-                if (!pal.lInterp) return;
-                const anchors = getPinnedIndices(pal);
-                if (isAnchorMode(pal) && anchors.length >= 2) {
-                    if (which === 'min') pal.steps[anchors[0]].l = v;
-                    else pal.steps[anchors[anchors.length - 1]].l = v;
-                    minIn.value = pal.steps[anchors[0]].l;
-                    maxIn.value = pal.steps[anchors[anchors.length - 1]].l;
-                    applyAnchorInterpL(pal);
-                } else {
-                    if (which === 'min') pal.steps[0].l = v;
-                    else pal.steps[n - 1].l = v;
-                    minIn.value = pal.steps[0].l;
-                    maxIn.value = pal.steps[n - 1].l;
-                    applyPropRamp(pal, 'l');
-                }
+                if (!pal.lInterp || useLPinHandles(pal)) return;
+                if (which === 'min') pal.steps[0].l = v;
+                else pal.steps[n - 1].l = v;
+                minIn.value = pal.steps[0].l;
+                maxIn.value = pal.steps[n - 1].l;
+                applyPropRamp(pal, 'l');
             } else {
                 if (isAnchorMode(pal)) return;
                 if (which === 'min') pal.steps[0][prop] = v;
@@ -2164,6 +2207,10 @@
                     <div class="label-l">
                         <span class="slider-top"><span class="slider-axis slider-axis-l">Lightness</span><span class="val val-l">0</span></span>
                         <div class="l-slider-stack">
+                            <div class="l-pin-mode-toggle">
+                                <button type="button" class="l-pin-view-btn" data-pin-view="pins">S piny</button>
+                                <button type="button" class="l-pin-view-btn" data-pin-view="endpoints">Bez pinů</button>
+                            </div>
                             <button type="button" class="l-interpolate-cta">Interpolovat</button>
                             <div class="slider-ramp-wrap" data-prop="l">
                                 <span class="ramp-hint ramp-hint-min"></span>
@@ -2186,6 +2233,17 @@
                 enterLInterp(block, pal);
             });
 
+            editor.querySelector('.l-pin-view-btn[data-pin-view="pins"]')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setLInterpPinView(block, pal, true);
+            });
+            editor.querySelector('.l-pin-view-btn[data-pin-view="endpoints"]')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setLInterpPinView(block, pal, false);
+            });
+
             editor.querySelectorAll('.slider-ramp-wrap').forEach(wrap => {
                 const prop = wrap.dataset.prop;
                 let altClick = false;
@@ -2202,7 +2260,7 @@
                 };
 
                 wrap.addEventListener('pointerdown', (e) => {
-                    if (e.target.closest('.l-interpolate-cta')) return;
+                    if (e.target.closest('.l-interpolate-cta, .l-pin-mode-toggle')) return;
                     altClick = e.altKey;
                     dragMoved = false;
                     if (e.altKey) return;
