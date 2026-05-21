@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HSLuv Palette</title>
+    <title>HSLuv/HCT Palette</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body {
@@ -136,15 +136,34 @@
             flex: 1;
             min-width: 0;
         }
-        .color-space-toggle {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
+        .history-controls {
             flex-shrink: 0;
         }
-        .color-space-toggle-label {
-            font-size: 0.7rem;
+        .history-controls-btns {
+            display: flex;
+            gap: 0.35rem;
+        }
+        .history-controls-btns button {
+            min-width: 2.5rem;
+            padding: 0.35rem 0.65rem;
+            background: #1a1a24;
+            border: 1px solid #333;
             color: #94a3b8;
+        }
+        .history-controls-btns button:hover:not(:disabled) {
+            color: #fff;
+            border-color: #555;
+            filter: none;
+        }
+        .history-controls-btns button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+        .color-space-field .color-space-toggle-btns {
+            display: flex;
+            border: 1px solid #333;
+            border-radius: 6px;
+            overflow: hidden;
         }
         .color-space-toggle-btns {
             display: flex;
@@ -1279,18 +1298,42 @@
         function setColorSpace(next) {
             if (next !== 'hsluv' && next !== 'hct') return;
             if (colorSpace === next) return;
+            pushHistory();
             colorSpace = next;
             palettes.forEach(pal => refreshStepHex(pal));
             render();
             afterPrimaryPaletteChange();
         }
 
-        function buildColorSpaceToggle() {
-            const wrap = document.createElement('div');
-            wrap.className = 'color-space-toggle';
-            const label = document.createElement('span');
-            label.className = 'color-space-toggle-label';
-            label.textContent = 'Prostor';
+        function buildHistoryControls() {
+            const field = document.createElement('div');
+            field.className = 'toolbar-field history-controls';
+            field.append('Historie');
+            const btns = document.createElement('div');
+            btns.className = 'history-controls-btns';
+            const undoBtn = document.createElement('button');
+            undoBtn.type = 'button';
+            undoBtn.id = 'historyUndoBtn';
+            undoBtn.title = 'Zpět (Ctrl+Z)';
+            undoBtn.setAttribute('aria-label', 'Zpět');
+            undoBtn.disabled = true;
+            undoBtn.textContent = '←';
+            const redoBtn = document.createElement('button');
+            redoBtn.type = 'button';
+            redoBtn.id = 'historyRedoBtn';
+            redoBtn.title = 'Vpřed (Ctrl+Y)';
+            redoBtn.setAttribute('aria-label', 'Vpřed');
+            redoBtn.disabled = true;
+            redoBtn.textContent = '→';
+            btns.append(undoBtn, redoBtn);
+            field.appendChild(btns);
+            return field;
+        }
+
+        function buildColorSpaceField() {
+            const field = document.createElement('div');
+            field.className = 'toolbar-field color-space-field';
+            field.append('Prostor');
             const btns = document.createElement('div');
             btns.className = 'color-space-toggle-btns';
             [['hsluv', 'HSLuv'], ['hct', 'HCT']].forEach(([id, text]) => {
@@ -1301,8 +1344,8 @@
                 btn.onclick = () => setColorSpace(id);
                 btns.appendChild(btn);
             });
-            wrap.append(label, btns);
-            return wrap;
+            field.appendChild(btns);
+            return field;
         }
 
         function hexToRgb(hex) {
@@ -2164,6 +2207,7 @@
                 return;
             }
             closeBezierEditor();
+            pushHistory();
 
             let bez = getInterpCurve(pal, prop, segIndex).slice();
             const panel = document.createElement('div');
@@ -2604,6 +2648,7 @@
         }
 
         function setDarkMode(block, pal, on, bgInput, darkBtn) {
+            pushHistory();
             if (on) {
                 pal.darkMode = true;
                 pal.bgHex = '#000000';
@@ -2677,7 +2722,114 @@
 
         let palettes = [];
         let sharedStepCount = DEFAULT_STEPS;
+        const HISTORY_MAX = 40;
+        let historyPast = [];
+        let historyFuture = [];
+        let historyDragDepth = 0;
+
         const $ = id => document.getElementById(id);
+
+        function cloneAppState() {
+            return {
+                palettes: structuredClone(palettes),
+                sharedStepCount,
+                colorSpace
+            };
+        }
+
+        function normalizePalettesAfterRestore() {
+            palettes.forEach(pal => {
+                pal.valEdit = null;
+                pal.hexEditIndex = null;
+                delete pal.hexEditT;
+                delete pal.selectedT;
+            });
+        }
+
+        function restoreAppState(snap) {
+            palettes = structuredClone(snap.palettes);
+            normalizePalettesAfterRestore();
+            sharedStepCount = snap.sharedStepCount;
+            colorSpace = snap.colorSpace;
+            closeColorPicker();
+            closeInterpCtxMenu();
+            closeSwatchCtxMenu();
+            closeBezierEditor();
+            render();
+            afterPrimaryPaletteChange();
+            updateHistoryUi();
+        }
+
+        function updateHistoryUi() {
+            const undoBtn = $('historyUndoBtn');
+            const redoBtn = $('historyRedoBtn');
+            if (!undoBtn || !redoBtn) return;
+            undoBtn.disabled = historyPast.length === 0;
+            redoBtn.disabled = historyFuture.length === 0;
+        }
+
+        function pushHistory() {
+            if (historyDragDepth > 0) return;
+            historyPast.push(cloneAppState());
+            if (historyPast.length > HISTORY_MAX) historyPast.shift();
+            historyFuture.length = 0;
+            updateHistoryUi();
+        }
+
+        function historyDragStart() {
+            if (historyDragDepth === 0) pushHistory();
+            historyDragDepth++;
+        }
+
+        function historyDragEnd() {
+            historyDragDepth = Math.max(0, historyDragDepth - 1);
+        }
+
+        function undoHistory() {
+            if (!historyPast.length) return;
+            historyFuture.push(cloneAppState());
+            restoreAppState(historyPast.pop());
+        }
+
+        function redoHistory() {
+            if (!historyFuture.length) return;
+            historyPast.push(cloneAppState());
+            restoreAppState(historyFuture.pop());
+        }
+
+        let historyGlobalListenersInited = false;
+
+        function bindHistoryButtons() {
+            const undoBtn = $('historyUndoBtn');
+            const redoBtn = $('historyRedoBtn');
+            if (!undoBtn || !redoBtn || undoBtn.dataset.bound === '1') return;
+            undoBtn.dataset.bound = '1';
+            redoBtn.dataset.bound = '1';
+            undoBtn.addEventListener('click', () => undoHistory());
+            redoBtn.addEventListener('click', () => redoHistory());
+        }
+
+        function initHistoryUi() {
+            if (!historyGlobalListenersInited) {
+                historyGlobalListenersInited = true;
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.closest('input, textarea, [contenteditable="true"]')) return;
+                    const mod = e.ctrlKey || e.metaKey;
+                    if (!mod) return;
+                    if (e.key === 'z' && !e.shiftKey) {
+                        e.preventDefault();
+                        undoHistory();
+                    } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
+                        e.preventDefault();
+                        redoHistory();
+                    }
+                });
+                document.addEventListener('pointerup', () => historyDragEnd());
+                document.addEventListener('pointercancel', () => historyDragEnd());
+            }
+            bindHistoryButtons();
+            updateHistoryUi();
+        }
 
         function stepPinT(step, index, n) {
             if (step.pinT != null) return step.pinT;
@@ -2804,6 +2956,7 @@
         }
 
         function setSharedStepCount(n) {
+            pushHistory();
             sharedStepCount = Math.max(2, Math.min(24, n));
             palettes.forEach(pal => {
                 resamplePaletteSteps(pal, sharedStepCount);
@@ -2986,6 +3139,7 @@
         }
 
         function enterLInterp(block, pal) {
+            pushHistory();
             pal.lInterp = true;
             if (hasPalettePins(pal)) pal.lInterpPinView = true;
             ensureInterpCurvesForPalette(pal, 'l');
@@ -3181,6 +3335,7 @@
             if (!norm) return false;
             const m = hexToModel(norm);
             if (!m) return false;
+            pushHistory();
             step.h = m.h;
             step.s = m.s;
             step.l = m.l;
@@ -3223,6 +3378,7 @@
         function togglePin(block, pal, index) {
             const n = pal.steps.length;
             if (n < 2) return;
+            pushHistory();
             const wasAnchor = isAnchorMode(pal);
             const step = pal.steps[index];
             if (!step.pinned) {
@@ -3295,6 +3451,7 @@
         }
 
         function addPalette() {
+            pushHistory();
             const ref = palettes[palettes.length - 1];
             const pal = createPalette(
                 sharedStepCount,
@@ -3928,6 +4085,7 @@
                 if (prop === 'h' && hsPinViewEnabled(pal, 'h')) return;
                 if (prop === 's' && hsPinViewEnabled(pal, 's')) return;
             }
+            pushHistory();
             const key = prop === 'h' ? 'hRamp' : 'sRamp';
             pal[key] = !pal[key];
             if (pal[key]) {
@@ -4040,6 +4198,7 @@
             const n = parseFloat(String(raw).replace(/°/g, '').trim());
             if (Number.isNaN(n)) return false;
             const v = clampSliderVal(prop, n);
+            pushHistory();
 
             if (prop === 'h') {
                 if (pal.selected !== null) {
@@ -4305,6 +4464,7 @@
                 }
                 hexInput.classList.remove('error');
                 bgInput.classList.remove('error');
+                pushHistory();
                 generatePalette(pal, true);
                 if (pal.darkMode) {
                     syncDarkModePaletteFromPrimary(pal, true);
@@ -4371,6 +4531,7 @@
                     if (e.altKey) return;
                     if (!pal.darkMode) return;
                     if (gainWrap.classList.contains('ramp-mode')) {
+                        historyDragStart();
                         e.preventDefault();
                         gainRampDrag = pickRampHandle(gainWrap, 'gain', e.clientX);
                         gainDragMoved = true;
@@ -4380,6 +4541,7 @@
                         return;
                     }
                     if (e.target.closest('input')) {
+                        historyDragStart();
                         const onMove = () => { gainDragMoved = true; };
                         document.addEventListener('pointermove', onMove);
                         document.addEventListener('pointerup', () => {
@@ -4441,9 +4603,8 @@
                 toolbar.append(paletteField, bgField, generateBtn);
             }
             if (pi === 0) {
-                const toolbarSpacer = document.createElement('div');
-                toolbarSpacer.className = 'toolbar-spacer';
-                toolbar.append(toolbarSpacer, buildColorSpaceToggle());
+                toolbar.prepend(buildColorSpaceField());
+                toolbar.prepend(buildHistoryControls());
             }
 
             const main = document.createElement('div');
@@ -4496,7 +4657,11 @@
                 delBtn.className = 'ghost danger';
                 delBtn.textContent = '−';
                 delBtn.title = 'Smazat paletu';
-                delBtn.onclick = () => { palettes.splice(pi, 1); render(); };
+                delBtn.onclick = () => {
+                    pushHistory();
+                    palettes.splice(pi, 1);
+                    render();
+                };
                 ctrl.append(delBtn, stepsGrow, addPalBtn);
             } else {
                 ctrl.append(stepsGrow, addPalBtn);
@@ -4615,6 +4780,7 @@
                     if (wrap.classList.contains('pin-ramp-mode')) {
                         pinDrag = pickPinHandle(wrap, pal, prop, e.clientX);
                         if (pinDrag < 0) return;
+                        historyDragStart();
                         e.preventDefault();
                         dragMoved = true;
                         wrap.setPointerCapture(e.pointerId);
@@ -4625,6 +4791,7 @@
 
                     if (wrap.classList.contains('ramp-mode')) {
                         if (prop === 'l' && !pal.lInterp) return;
+                        historyDragStart();
                         e.preventDefault();
                         rampDrag = pickRampHandle(wrap, prop, e.clientX);
                         dragMoved = true;
@@ -4636,6 +4803,7 @@
                     if (prop === 'l' && !wrap.classList.contains('ramp-mode')) return;
 
                     if (e.target.closest('input')) {
+                        historyDragStart();
                         const onMove = () => { dragMoved = true; };
                         document.addEventListener('pointermove', onMove);
                         document.addEventListener('pointerup', () => {
@@ -4693,6 +4861,12 @@
             editor.querySelector('.input-h').oninput = e => onSlider(block, pal, 'h', e.target.value);
             editor.querySelector('.input-s').oninput = e => onSlider(block, pal, 's', e.target.value);
             editor.querySelector('.input-l').oninput = e => onSlider(block, pal, 'l', e.target.value);
+            editor.querySelectorAll('input[type="range"]').forEach(inp => {
+                inp.addEventListener('pointerdown', (e) => {
+                    if (e.button !== 0) return;
+                    historyDragStart();
+                }, { capture: true });
+            });
 
             editor.querySelectorAll('.val-wrap[data-prop]').forEach(valWrap => {
                 const prop = valWrap.dataset.prop;
@@ -4735,6 +4909,7 @@
             document.body.classList.toggle('scroll-palettes', scrollPalettes);
             $('palettesContainer').replaceChildren(...palettes.map((pal, i) => buildPaletteBlock(pal, i)));
             scheduleSliderTrackRefresh();
+            initHistoryUi();
         }
 
         palettes = [createPalette(DEFAULT_STEPS, DEFAULT_HEX, DEFAULT_BG)];
