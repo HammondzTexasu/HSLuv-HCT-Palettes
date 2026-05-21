@@ -2807,8 +2807,8 @@
             sharedStepCount = Math.max(2, Math.min(24, n));
             palettes.forEach(pal => {
                 resamplePaletteSteps(pal, sharedStepCount);
-                if (isAnchorMode(pal)) applyAnchorInterp(pal);
-                if (pal.lInterp) applyLInterp(pal);
+                if (isAnchorMode(pal)) applyAnchorInterpAll(pal);
+                else if (pal.lInterp) applyLInterp(pal);
             });
             render();
             afterPrimaryPaletteChange();
@@ -2925,12 +2925,16 @@
             refreshStepHex(pal);
         }
 
-        function applyHsAnchorPalette(pal) {
+        /** Přepočítá jen mezilehlé kroky mezi piny; hodnoty pinů (včetně z hexu) nemění. */
+        function applyAnchorInterpAll(pal) {
             if (!isAnchorMode(pal)) return;
-            if (usePropPinHandles(pal, 'h')) applyAnchorInterpProp(pal, 'h');
-            else applyPropRamp(pal, 'h');
-            if (usePropPinHandles(pal, 's')) applyAnchorInterpProp(pal, 's');
-            else applyPropRamp(pal, 's');
+            applyAnchorInterpProp(pal, 'h');
+            applyAnchorInterpProp(pal, 's');
+            if (pal.lInterp) applyAnchorInterpL(pal);
+        }
+
+        function applyHsAnchorPalette(pal) {
+            applyAnchorInterpAll(pal);
         }
 
         function applyPinPropInterp(pal, prop) {
@@ -2952,7 +2956,6 @@
             if (!isAnchorMode(pal)) return;
             pal.hPinView = true;
             pal.sPinView = true;
-            pal.lInterp = true;
             pal.lInterpPinView = true;
             ensureInterpCurvesForPalette(pal, 'h');
             ensureInterpCurvesForPalette(pal, 's');
@@ -2984,6 +2987,7 @@
 
         function enterLInterp(block, pal) {
             pal.lInterp = true;
+            if (hasPalettePins(pal)) pal.lInterpPinView = true;
             ensureInterpCurvesForPalette(pal, 'l');
             const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
             if (!wrap) return;
@@ -3007,19 +3011,14 @@
             const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
             if (!wrap) return;
             if (withPins) {
-                ensureInterpCurvesForPalette(pal, 'l');
                 renderPinMarkers(block, pal, 'l');
-                applyAnchorInterpL(pal);
             } else {
                 const minIn = wrap.querySelector('.ramp-min');
                 const maxIn = wrap.querySelector('.ramp-max');
                 minIn.value = pal.steps[0].l;
                 maxIn.value = pal.steps[pal.steps.length - 1].l;
-                applyPropRamp(pal, 'l');
             }
             syncEditor(block, pal);
-            updateSwatches(block, pal);
-            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
         function setHsPinView(block, pal, prop, withPins) {
@@ -3029,9 +3028,7 @@
             const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
             if (!wrap) return;
             if (withPins) {
-                ensureInterpCurvesForPalette(pal, prop);
                 renderPinMarkers(block, pal, prop);
-                applyAnchorInterpProp(pal, prop);
             } else {
                 const minIn = wrap.querySelector('.ramp-min');
                 const maxIn = wrap.querySelector('.ramp-max');
@@ -3040,11 +3037,8 @@
                 maxIn.value = pal.steps[n - 1][prop];
                 if (prop === 'h') pal.hRamp = true;
                 else pal.sRamp = true;
-                applyPropRamp(pal, prop);
             }
             syncEditor(block, pal);
-            updateSwatches(block, pal);
-            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
         function updatePinValDisplay(block, pal, prop) {
@@ -3166,7 +3160,7 @@
         }
 
         function applyAnchorInterp(pal) {
-            applyHsAnchorPalette(pal);
+            applyAnchorInterpAll(pal);
         }
 
         function clearAllPins(pal) {
@@ -3196,8 +3190,7 @@
             if (!isAnchorMode(pal)) {
                 exitLInterp(pal);
             } else {
-                applyAnchorInterp(pal);
-                if (pal.lInterp) applyLInterp(pal);
+                applyAnchorInterpAll(pal);
             }
             updateSwatches(block, pal);
             syncEditor(block, pal);
@@ -3253,9 +3246,8 @@
                 pal.sPinView = false;
             } else if (isAnchorMode(pal)) {
                 if (!wasAnchor) ensureAnchorPinDefaults(pal);
-                applyHsAnchorPalette(pal);
+                applyAnchorInterpAll(pal);
             }
-            if (pal.lInterp) applyLInterp(pal);
             updateSwatches(block, pal);
             syncEditor(block, pal);
             if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
@@ -4050,11 +4042,15 @@
             const v = clampSliderVal(prop, n);
 
             if (prop === 'h') {
-                if (pal.selected === null && usePropPinHandles(pal, 'h')) {
+                if (pal.selected !== null) {
+                    onSlider(block, pal, 'h', String(v));
+                    return true;
+                }
+                if (usePropPinHandles(pal, 'h')) {
                     onPinSlider(block, pal, 'h', idx, String(v));
                     return true;
                 }
-                if (pal.selected === null && (pal.hRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 'h')))) {
+                if (pal.hRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 'h'))) {
                     onRampSlider(block, pal, 'h', idx === 0 ? 'min' : 'max', String(v));
                     return true;
                 }
@@ -4062,11 +4058,15 @@
                 return true;
             }
             if (prop === 's') {
-                if (pal.selected === null && usePropPinHandles(pal, 's')) {
+                if (pal.selected !== null) {
+                    onSlider(block, pal, 's', String(v));
+                    return true;
+                }
+                if (usePropPinHandles(pal, 's')) {
                     onPinSlider(block, pal, 's', idx, String(v));
                     return true;
                 }
-                if (pal.selected === null && (pal.sRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 's')))) {
+                if (pal.sRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 's'))) {
                     onRampSlider(block, pal, 's', idx === 0 ? 'min' : 'max', String(v));
                     return true;
                 }
@@ -4074,6 +4074,10 @@
                 return true;
             }
             if (prop === 'l') {
+                if (pal.selected !== null) {
+                    onSlider(block, pal, 'l', String(v));
+                    return true;
+                }
                 if (pal.lInterp && useLPinHandles(pal)) {
                     onPinSlider(block, pal, 'l', idx, String(v));
                     return true;
@@ -4180,40 +4184,23 @@
             } else {
                 const step = pal.steps[pal.selected];
                 if (prop === 'l') {
-                    if (anchorMode && step.pinned) {
-                        const lv = clampSliderVal('l', v);
-                        if (pal.darkMode) {
-                            const si = pal.selected;
-                            const g = dmGainAtIndex(pal, si);
-                            if (!pal.dmBaseL) pal.dmBaseL = [];
-                            pal.dmBaseL[si] = clampSliderVal('l', lv - g);
-                            step.l = clampSliderVal('l', pal.dmBaseL[si] + g);
-                        } else {
-                            step.l = lv;
-                        }
-                        if (pal.lInterp) {
-                            applyAnchorInterpL(pal);
-                        } else {
-                            step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
-                        }
+                    exitLInterp(pal);
+                    const lv = clampSliderVal('l', v);
+                    if (pal.darkMode) {
+                        const si = pal.selected;
+                        const g = dmGainAtIndex(pal, si);
+                        if (!pal.dmBaseL) pal.dmBaseL = [];
+                        pal.dmBaseL[si] = clampSliderVal('l', lv - g);
+                        step.l = clampSliderVal('l', pal.dmBaseL[si] + g);
                     } else {
-                        exitLInterp(pal);
-                        if (pal.darkMode) {
-                            const si = pal.selected;
-                            const g = dmGainAtIndex(pal, si);
-                            if (!pal.dmBaseL) pal.dmBaseL = [];
-                            pal.dmBaseL[si] = clampSliderVal('l', v - g);
-                            step.l = clampSliderVal('l', pal.dmBaseL[si] + g);
-                        } else {
-                            step.l = v;
-                        }
-                        step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
+                        step.l = lv;
                     }
+                    step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
                 } else if (anchorMode) {
                     if (!step.pinned) return;
-                    step[prop] = v;
+                    step[prop] = clampSliderVal(prop, v);
                     if (prop === 'h' || prop === 's') applyAnchorInterpProp(pal, prop);
-                    else applyAnchorInterp(pal);
+                    else step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
                 } else {
                     step[prop] = v;
                     step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
