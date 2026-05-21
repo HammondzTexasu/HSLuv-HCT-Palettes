@@ -186,6 +186,7 @@
             width: 100%;
         }
         .interp-ctx-menu,
+        .swatch-ctx-menu,
         .interp-ctx-menu {
             position: fixed;
             z-index: 2100;
@@ -197,6 +198,7 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
         }
         .interp-ctx-menu button,
+        .swatch-ctx-menu button,
         .gain-ctx-menu button {
             display: block;
             width: 100%;
@@ -210,6 +212,7 @@
             cursor: pointer;
         }
         .interp-ctx-menu button:hover,
+        .swatch-ctx-menu button:hover,
         .gain-ctx-menu button:hover {
             background: #1e293b;
             filter: none;
@@ -766,13 +769,44 @@
             width: 50%;
             aspect-ratio: 1;
             flex-shrink: 0;
-            border-radius: 2px;
+            border-radius: var(--swatch-radius, 6px);
             opacity: 0;
             padding: 0;
             border: none;
             cursor: pointer;
             pointer-events: auto;
             filter: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .swatch-next-chip-label {
+            display: none;
+            position: relative;
+            z-index: 1;
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+            text-align: center;
+            padding: 0 0.15rem;
+            pointer-events: none;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.55), 0 0 2px rgba(255, 255, 255, 0.35);
+        }
+        .swatch-next-chip.chip-light .swatch-next-chip-label {
+            color: #0a0a0f;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.65);
+        }
+        .swatch-next-chip.chip-dark .swatch-next-chip-label {
+            color: #f8fafc;
+        }
+        .palette-row.chips-locked .swatch-next-chip-label {
+            display: block;
+        }
+        .palette-row.chips-locked .swatch-next-chip {
+            opacity: 1;
         }
         .swatch-next-chip:hover,
         .swatch-next-chip:focus,
@@ -808,7 +842,8 @@
             opacity: 0;
         }
         label,
-        .label-l {
+        .label-l,
+        .slider-prop-label {
             display: flex;
             flex-direction: column;
             gap: 0.25rem;
@@ -1000,11 +1035,12 @@
         }
         .slider-ramp-wrap.slider-inactive .track-fill,
         .slider-ramp-wrap.slider-inactive input[type="range"],
-        .slider-ramp-wrap.slider-inactive .l-pin-handles,
+        .slider-ramp-wrap.slider-inactive .pin-handles,
         .slider-ramp-wrap.slider-inactive .ramp-hint {
             display: none !important;
         }
-        .l-slider-stack {
+        .l-slider-stack,
+        .prop-slider-stack {
             position: relative;
             min-width: 0;
             max-width: 100%;
@@ -1036,7 +1072,8 @@
         .label-l.l-await-interp .l-interpolate-cta {
             display: block;
         }
-        .l-pin-mode-toggle {
+        .l-pin-mode-toggle,
+        .pin-mode-toggle {
             position: absolute;
             left: 50%;
             top: 0;
@@ -1044,14 +1081,17 @@
             display: none;
             justify-content: center;
             align-items: center;
-            gap: 0.65rem;
             z-index: 5;
             pointer-events: auto;
         }
-        .label-l.l-interp-on.l-has-pins .l-pin-mode-toggle {
+        .label-l.l-interp-on.l-has-pins.slider-whole .l-pin-mode-toggle {
             display: flex;
         }
-        .l-pin-view-btn {
+        .label-h.has-pins.slider-whole .pin-mode-toggle[data-prop="h"],
+        .label-s.has-pins.slider-whole .pin-mode-toggle[data-prop="s"] {
+            display: flex;
+        }
+        .pin-view-btn {
             padding: 0;
             border: none;
             background: none;
@@ -1061,34 +1101,34 @@
             cursor: pointer;
             white-space: nowrap;
         }
-        .l-pin-view-btn:hover {
+        .pin-view-btn:hover {
             filter: brightness(1.1);
         }
         .slider-ramp-wrap.ramp-mode,
-        .slider-ramp-wrap.l-pin-ramp-mode {
+        .slider-ramp-wrap.pin-ramp-mode {
             pointer-events: auto;
         }
-        .slider-ramp-wrap[data-prop="l"].l-pin-ramp-mode .l-pin-handles {
+        .slider-ramp-wrap.pin-ramp-mode .pin-handles {
             display: block;
         }
-        .slider-ramp-wrap[data-prop="l"] .l-pin-handles {
+        .slider-ramp-wrap .pin-handles {
             display: none;
             position: absolute;
             inset: 0;
             pointer-events: none;
             z-index: 3;
         }
-        .slider-ramp-wrap[data-prop="l"].l-pin-ramp-mode {
+        .slider-ramp-wrap.pin-ramp-mode {
             cursor: pointer;
             touch-action: none;
         }
-        .slider-ramp-wrap[data-prop="l"].l-pin-ramp-mode .l-pin-handles {
+        .slider-ramp-wrap.pin-ramp-mode .pin-handles {
             pointer-events: auto;
         }
-        .slider-ramp-wrap[data-prop="l"].l-pin-ramp-mode input[type="range"] {
+        .slider-ramp-wrap.pin-ramp-mode input[type="range"] {
             display: none !important;
         }
-        .l-pin-hint-marker {
+        .pin-hint-marker {
             position: absolute;
             bottom: calc(100% + 4px);
             transform: translateX(-50%);
@@ -1105,10 +1145,10 @@
             transition: opacity 0.12s;
             z-index: 4;
         }
-        .l-pin-hint-marker.visible {
+        .pin-hint-marker.visible {
             opacity: 1;
         }
-        .l-pin-thumb {
+        .pin-thumb {
             position: absolute;
             top: 50%;
             transform: translate(-50%, -50%);
@@ -1674,6 +1714,70 @@
             return Math.round(Math.max(0, Math.min(100, bestL)) * 10) / 10;
         }
 
+        function setStepLTone(pal, i, l) {
+            const step = pal.steps[i];
+            if (!step) return;
+            const lv = clampSliderVal('l', l);
+            if (pal.darkMode) {
+                commitDarkModeBaseL(pal, i, lv - dmGainAtIndex(pal, i));
+            } else {
+                step.l = lv;
+                step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
+            }
+        }
+
+        function solveLForTargetLuminance(h, s, targetY, hintL) {
+            if (targetY == null) return hintL;
+            let bestL = hintL;
+            let bestErr = Infinity;
+            for (let i = 0; i <= 1000; i++) {
+                const l = Math.round(i) / 10;
+                const hex = modelToHex(h, s, l);
+                if (!hex) continue;
+                const y = relativeLuminance(hex);
+                if (y == null) continue;
+                const err = Math.abs(y - targetY);
+                if (err < bestErr) {
+                    bestErr = err;
+                    bestL = l;
+                }
+            }
+            return Math.round(Math.max(0, Math.min(100, bestL)) * 10) / 10;
+        }
+
+        /**
+         * Rovnoměrná WCAG škála mezi kotvami (viz Rovnomerna skala.txt):
+         * geometrická řada v relativní luminanci Y, první/poslední krok beze změny L.
+         */
+        function alignAdjacentWcagContrast(pal) {
+            const n = pal.steps.length;
+            if (n < 2) return false;
+            if (n === 2) {
+                refreshStepHex(pal);
+                return true;
+            }
+
+            const y0 = relativeLuminance(pal.steps[0].hex);
+            const yN = relativeLuminance(pal.steps[n - 1].hex);
+            if (y0 == null || yN == null) return false;
+
+            const segments = n - 1;
+            const ratio = Math.pow((yN + 0.05) / (y0 + 0.05), 1 / segments);
+            const l0 = pal.steps[0].l;
+            const lN = pal.steps[n - 1].l;
+
+            for (let i = 1; i < n - 1; i++) {
+                const yTarget = (y0 + 0.05) * Math.pow(ratio, i) - 0.05;
+                const step = pal.steps[i];
+                const hint = l0 + (lN - l0) * (i / segments);
+                const l = solveLForTargetLuminance(step.h, step.s, yTarget, hint);
+                setStepLTone(pal, i, l);
+            }
+
+            refreshStepHex(pal);
+            return true;
+        }
+
         function isPrimaryPalette(pal) {
             return palettes[0] === pal;
         }
@@ -1813,10 +1917,11 @@
             if (prop === 'gain') return pal.darkMode && pal.dmGainRamp;
             if (isAnchorMode(pal) && getPinnedIndices(pal).length >= 2) {
                 if (prop === 'l') return pal.lInterp;
-                return prop === 'h' || prop === 's';
+                if (prop === 'h') return hsPinViewEnabled(pal, 'h');
+                if (prop === 's') return hsPinViewEnabled(pal, 's');
             }
-            if (prop === 'h') return pal.hRamp && wrap.classList.contains('ramp-mode');
-            if (prop === 's') return pal.sRamp && wrap.classList.contains('ramp-mode');
+            if (prop === 'h') return wrap.classList.contains('ramp-mode');
+            if (prop === 's') return wrap.classList.contains('ramp-mode');
             if (prop === 'l') return pal.lInterp;
             return false;
         }
@@ -1852,7 +1957,9 @@
         }
 
         function pickInterpSegmentIndex(pal, prop, wrap, clientX) {
-            if (isAnchorMode(pal)) return pickAnchorSegmentByX(wrap, pal, prop, clientX);
+            if (usePropPinHandles(pal, prop)) {
+                return pickAnchorSegmentByX(wrap, pal, prop, clientX);
+            }
             if (prop === 'l' && useLPinHandles(pal)) {
                 return pickLPinSegmentByX(wrap, pal, clientX);
             }
@@ -1886,7 +1993,7 @@
 
         function interpSegmentTitle(pal, prop, segIndex) {
             const anchors = getPinnedIndices(pal);
-            if ((prop === 'l' && useLPinHandles(pal)) || (isAnchorMode(pal) && anchors.length >= 2)) {
+            if (usePropPinHandles(pal, prop) || (prop === 'l' && useLPinHandles(pal))) {
                 const i0 = anchors[segIndex];
                 const i1 = anchors[segIndex + 1];
                 if (i0 != null && i1 != null) {
@@ -1914,7 +2021,10 @@
             }
             if (isAnchorMode(pal)) {
                 if (prop === 'l') applyAnchorInterpL(pal);
-                else if (prop === 'h' || prop === 's') applyAnchorInterp(pal);
+                else if (prop === 'h' || prop === 's') {
+                    if (usePropPinHandles(pal, prop)) applyAnchorInterpProp(pal, prop);
+                    else applyPropRamp(pal, prop);
+                }
             } else if (prop === 'l') applyLInterp(pal);
             else if (prop === 'h' || prop === 's') applyPropRamp(pal, prop);
             if (block) {
@@ -1925,7 +2035,7 @@
         }
 
         function ensureInterpCurvesForPalette(pal, prop) {
-            if ((prop === 'l' && useLPinHandles(pal)) || (isAnchorMode(pal) && getPinnedIndices(pal).length >= 2)) {
+            if (usePropPinHandles(pal, prop) || (prop === 'l' && useLPinHandles(pal))) {
                 const anchors = getPinnedIndices(pal);
                 for (let a = 0; a < anchors.length - 1; a++) {
                     ensureInterpCurve(pal, prop, a);
@@ -1936,11 +2046,58 @@
         }
 
         let interpCtxMenuEl = null;
+        let swatchCtxMenuEl = null;
         let bezierEditorOpen = null;
 
         function closeInterpCtxMenu() {
             interpCtxMenuEl?.remove();
             interpCtxMenuEl = null;
+        }
+
+        function closeSwatchCtxMenu() {
+            swatchCtxMenuEl?.remove();
+            swatchCtxMenuEl = null;
+        }
+
+        function lockSwatchChipsVisible(block) {
+            const row = getPaletteRow(block);
+            if (!row) return;
+            row.dataset.chipsLocked = '1';
+            row.classList.add('chips-visible', 'chips-locked');
+        }
+
+        function terminalChipFgHex(bgHex) {
+            return isLightHex(bgHex) ? '#FFFFFF' : '#000000';
+        }
+
+        function showSwatchChipContextMenu(e, block, pal, pairIndex) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeSwatchCtxMenu();
+            closeInterpCtxMenu();
+            const menu = document.createElement('div');
+            menu.className = 'swatch-ctx-menu';
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.textContent = 'Vyrovnat kontrast';
+            item.onclick = (ev) => {
+                ev.stopPropagation();
+                closeSwatchCtxMenu();
+                if (!alignAdjacentWcagContrast(pal)) return;
+                lockSwatchChipsVisible(block);
+                updateSwatches(block, pal);
+                syncEditor(block, pal);
+                if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
+            };
+            menu.appendChild(item);
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            document.body.appendChild(menu);
+            swatchCtxMenuEl = menu;
+            requestAnimationFrame(() => {
+                document.addEventListener('click', closeSwatchCtxMenu, { once: true });
+                document.addEventListener('contextmenu', closeSwatchCtxMenu, { once: true });
+            });
         }
 
         function showInterpContextMenu(e, block, pal, wrap, prop) {
@@ -2675,6 +2832,8 @@
                 bgPreview: false,
                 hRamp: false,
                 sRamp: false,
+                hPinView: false,
+                sPinView: false,
                 lInterp: false,
                 lInterpPinView: false,
                 valEdit: null,
@@ -2697,13 +2856,107 @@
             return countPinned(pal) > 0;
         }
 
+        function hsPinViewEnabled(pal, prop) {
+            return prop === 'h' ? !!pal.hPinView : !!pal.sPinView;
+        }
+
+        const PIN_VIEW_LABEL_PINS = 'S piny';
+        const PIN_VIEW_LABEL_NO_PINS = 'Bez pinů';
+
+        function propPinViewEnabled(pal, prop) {
+            if (prop === 'l') return !!pal.lInterp && !!pal.lInterpPinView;
+            if (prop === 'h') return hsPinViewEnabled(pal, 'h');
+            if (prop === 's') return hsPinViewEnabled(pal, 's');
+            return false;
+        }
+
+        function syncPinViewToggleButtons(block, pal) {
+            block.querySelectorAll('.pin-view-btn').forEach(btn => {
+                const prop = btn.dataset.prop;
+                if (!prop) return;
+                const withPins = propPinViewEnabled(pal, prop);
+                btn.textContent = withPins ? PIN_VIEW_LABEL_NO_PINS : PIN_VIEW_LABEL_PINS;
+                btn.setAttribute('aria-pressed', withPins ? 'true' : 'false');
+                btn.setAttribute('aria-label', withPins
+                    ? `Režim s piny. Přepnout na ${PIN_VIEW_LABEL_NO_PINS.toLowerCase()}.`
+                    : `Režim bez pinů. Přepnout na ${PIN_VIEW_LABEL_PINS.toLowerCase()}.`);
+            });
+        }
+
+        function usePropPinHandles(pal, prop) {
+            if (!isAnchorMode(pal)) return false;
+            if (pal.selected !== null) return false;
+            if (prop === 'l') return !!pal.lInterp && !!pal.lInterpPinView;
+            if (prop === 'h' || prop === 's') return hsPinViewEnabled(pal, prop);
+            return false;
+        }
+
         function useLPinHandles(pal) {
-            return pal.lInterp && !!pal.lInterpPinView && hasPalettePins(pal);
+            return usePropPinHandles(pal, 'l');
+        }
+
+        function clampPinProp(prop, raw) {
+            let v = parseFloat(raw);
+            if (prop === 'h') return Math.max(0, Math.min(360, Math.round(v)));
+            return Math.max(0, Math.min(100, Math.round(v * 10) / 10));
+        }
+
+        function formatPinVal(prop, v) {
+            if (prop === 'h') return `${Math.round(v)}°`;
+            return v.toFixed(1);
+        }
+
+        function applyAnchorInterpProp(pal, prop) {
+            const anchors = getPinnedIndices(pal);
+            if (anchors.length < 2) return;
+            for (let a = 0; a < anchors.length - 1; a++) {
+                const i0 = anchors[a];
+                const i1 = anchors[a + 1];
+                const v0 = pal.steps[i0][prop];
+                const v1 = pal.steps[i1][prop];
+                const bez = getInterpCurve(pal, prop, a);
+                for (let i = i0 + 1; i < i1; i++) {
+                    const t = (i - i0) / (i1 - i0);
+                    const e = sampleInterpBezier(t, bez);
+                    if (prop === 'h') pal.steps[i].h = lerpHue(v0, v1, e);
+                    else pal.steps[i][prop] = v0 + (v1 - v0) * e;
+                }
+            }
+            refreshStepHex(pal);
+        }
+
+        function applyHsAnchorPalette(pal) {
+            if (!isAnchorMode(pal)) return;
+            if (usePropPinHandles(pal, 'h')) applyAnchorInterpProp(pal, 'h');
+            else applyPropRamp(pal, 'h');
+            if (usePropPinHandles(pal, 's')) applyAnchorInterpProp(pal, 's');
+            else applyPropRamp(pal, 's');
+        }
+
+        function applyPinPropInterp(pal, prop) {
+            if (prop === 'l') applyAnchorInterpL(pal);
+            else if (prop === 'h' || prop === 's') applyAnchorInterpProp(pal, prop);
+        }
+
+        function lerpHue(h0, h1, t) {
+            const d = ((h1 - h0 + 540) % 360) - 180;
+            return ((h0 + d * t) % 360 + 360) % 360;
         }
 
         function exitLInterp(pal) {
             pal.lInterp = false;
             pal.lInterpPinView = false;
+        }
+
+        function ensureAnchorPinDefaults(pal) {
+            if (!isAnchorMode(pal)) return;
+            pal.hPinView = true;
+            pal.sPinView = true;
+            pal.lInterp = true;
+            pal.lInterpPinView = true;
+            ensureInterpCurvesForPalette(pal, 'h');
+            ensureInterpCurvesForPalette(pal, 's');
+            ensureInterpCurvesForPalette(pal, 'l');
         }
 
         function applyAnchorInterpL(pal) {
@@ -2735,7 +2988,7 @@
             const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
             if (!wrap) return;
             if (useLPinHandles(pal)) {
-                renderLPinMarkers(block, pal);
+                renderPinMarkers(block, pal, 'l');
             } else {
                 const minIn = wrap.querySelector('.ramp-min');
                 const maxIn = wrap.querySelector('.ramp-max');
@@ -2755,7 +3008,7 @@
             if (!wrap) return;
             if (withPins) {
                 ensureInterpCurvesForPalette(pal, 'l');
-                renderLPinMarkers(block, pal);
+                renderPinMarkers(block, pal, 'l');
                 applyAnchorInterpL(pal);
             } else {
                 const minIn = wrap.querySelector('.ramp-min');
@@ -2769,57 +3022,83 @@
             if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
-        function updateLPinValDisplay(block, pal) {
-            const anchors = getPinnedIndices(pal);
-            setValDisplay(block, pal, 'l',
-                anchors.map(i => pal.steps[i].l.toFixed(1)), '·');
+        function setHsPinView(block, pal, prop, withPins) {
+            if (!isAnchorMode(pal) || (prop !== 'h' && prop !== 's')) return;
+            if (prop === 'h') pal.hPinView = withPins;
+            else pal.sPinView = withPins;
+            const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
+            if (!wrap) return;
+            if (withPins) {
+                ensureInterpCurvesForPalette(pal, prop);
+                renderPinMarkers(block, pal, prop);
+                applyAnchorInterpProp(pal, prop);
+            } else {
+                const minIn = wrap.querySelector('.ramp-min');
+                const maxIn = wrap.querySelector('.ramp-max');
+                const n = pal.steps.length;
+                minIn.value = pal.steps[0][prop];
+                maxIn.value = pal.steps[n - 1][prop];
+                if (prop === 'h') pal.hRamp = true;
+                else pal.sRamp = true;
+                applyPropRamp(pal, prop);
+            }
+            syncEditor(block, pal);
+            updateSwatches(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
-        function renderLPinMarkers(block, pal) {
-            const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
-            const container = wrap?.querySelector('.l-pin-handles');
+        function updatePinValDisplay(block, pal, prop) {
+            const anchors = getPinnedIndices(pal);
+            setValDisplay(block, pal, prop,
+                anchors.map(i => formatPinVal(prop, pal.steps[i][prop])), '·');
+        }
+
+        function renderPinMarkers(block, pal, prop) {
+            const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
+            const container = wrap?.querySelector('.pin-handles');
             if (!container) return;
             container.replaceChildren();
             const anchors = getPinnedIndices(pal);
             anchors.forEach((stepIdx, ai) => {
                 const hint = document.createElement('span');
-                hint.className = 'l-pin-hint-marker';
+                hint.className = 'pin-hint-marker';
                 hint.dataset.anchorIdx = String(ai);
                 hint.textContent = String(ai + 1);
                 const thumb = document.createElement('span');
-                thumb.className = 'l-pin-thumb';
+                thumb.className = 'pin-thumb';
                 thumb.dataset.anchorIdx = String(ai);
                 container.append(hint, thumb);
             });
             container.dataset.pinKey = anchors.join(',');
-            updateLPinMarkerPositions(block, pal);
+            updatePinMarkerPositions(block, pal, prop);
         }
 
-        function updateLPinMarkerPositions(block, pal) {
-            const wrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
+        function updatePinMarkerPositions(block, pal, prop) {
+            const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
             if (!wrap) return;
+            const { min, max } = rampRange(prop);
             const anchors = getPinnedIndices(pal);
             const trackW = wrap.getBoundingClientRect().width || 1;
             anchors.forEach((stepIdx, ai) => {
-                const centerPct = valueToTrackPct(pal.steps[stepIdx].l, 0, 100, trackW);
-                const pct = centerPct + '%';
-                const hint = wrap.querySelector(`.l-pin-hint-marker[data-anchor-idx="${ai}"]`);
-                const thumb = wrap.querySelector(`.l-pin-thumb[data-anchor-idx="${ai}"]`);
+                const centerPct = valueToTrackPct(pal.steps[stepIdx][prop], min, max, trackW);
+                const hint = wrap.querySelector(`.pin-hint-marker[data-anchor-idx="${ai}"]`);
+                const thumb = wrap.querySelector(`.pin-thumb[data-anchor-idx="${ai}"]`);
                 if (hint) setHintLeftFromCenterPct(hint, wrap, centerPct);
-                if (thumb) thumb.style.left = pct;
+                if (thumb) thumb.style.left = centerPct + '%';
             });
         }
 
-        function pickLPinHandle(wrap, pal, clientX) {
+        function pickPinHandle(wrap, pal, prop, clientX) {
             const anchors = getPinnedIndices(pal);
             const rect = wrap.getBoundingClientRect();
             if (!rect.width || anchors.length === 0) return -1;
+            const { min, max } = rampRange(prop);
             const x = clientX - rect.left;
             let best = 0;
             let bestD = Infinity;
             for (let a = 0; a < anchors.length; a++) {
-                const l = pal.steps[anchors[a]].l;
-                const cx = (valueToTrackPct(l, 0, 100, rect.width) / 100) * rect.width;
+                const v = pal.steps[anchors[a]][prop];
+                const cx = (valueToTrackPct(v, min, max, rect.width) / 100) * rect.width;
                 const d = Math.abs(x - cx);
                 if (d < bestD) {
                     bestD = d;
@@ -2829,28 +3108,25 @@
             return best;
         }
 
-        function showLPinHints(wrap, anchorIdx) {
-            wrap.querySelectorAll('.l-pin-hint-marker').forEach(el => {
+        function showPinHints(wrap, anchorIdx) {
+            wrap.querySelectorAll('.pin-hint-marker').forEach(el => {
                 el.classList.toggle('visible', parseInt(el.dataset.anchorIdx, 10) === anchorIdx);
             });
         }
 
-        function hideLPinHints(wrap) {
-            wrap.querySelectorAll('.l-pin-hint-marker').forEach(el => el.classList.remove('visible'));
+        function hidePinHints(wrap) {
+            wrap.querySelectorAll('.pin-hint-marker').forEach(el => el.classList.remove('visible'));
         }
 
-        function onLPinSlider(block, pal, anchorIdx, raw) {
+        function onPinSlider(block, pal, prop, anchorIdx, raw) {
             const anchors = getPinnedIndices(pal);
             const stepIdx = anchors[anchorIdx];
             if (stepIdx == null) return;
-            let v = parseFloat(raw);
-            v = Math.max(0, Math.min(100, v));
-            v = Math.round(v * 10) / 10;
-            pal.steps[stepIdx].l = v;
-            applyAnchorInterpL(pal);
-            updateLPinMarkerPositions(block, pal);
-            updateLPinValDisplay(block, pal);
-            updateSliderTrack(block, pal, 'l');
+            pal.steps[stepIdx][prop] = clampPinProp(prop, raw);
+            applyPinPropInterp(pal, prop);
+            updatePinMarkerPositions(block, pal, prop);
+            updatePinValDisplay(block, pal, prop);
+            updateSliderTrack(block, pal, prop);
             updateSwatches(block, pal);
             if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
@@ -2890,26 +3166,7 @@
         }
 
         function applyAnchorInterp(pal) {
-            const anchors = getPinnedIndices(pal);
-            if (anchors.length < 2) return;
-            for (let a = 0; a < anchors.length - 1; a++) {
-                const i0 = anchors[a];
-                const i1 = anchors[a + 1];
-                const h0 = pal.steps[i0].h;
-                const h1 = pal.steps[i1].h;
-                const s0 = pal.steps[i0].s;
-                const s1 = pal.steps[i1].s;
-                const bezH = getInterpCurve(pal, 'h', a);
-                const bezS = getInterpCurve(pal, 's', a);
-                for (let i = i0 + 1; i < i1; i++) {
-                    const t = (i - i0) / (i1 - i0);
-                    const eH = sampleInterpBezier(t, bezH);
-                    const eS = sampleInterpBezier(t, bezS);
-                    pal.steps[i].h = h0 + (h1 - h0) * eH;
-                    pal.steps[i].s = s0 + (s1 - s0) * eS;
-                }
-            }
-            refreshStepHex(pal);
+            applyHsAnchorPalette(pal);
         }
 
         function clearAllPins(pal) {
@@ -2936,8 +3193,12 @@
             step.hex = modelToHex(m.h, m.s, m.l) ?? norm;
             cancelHexEdit(pal);
             setSelection(pal, index);
-            exitLInterp(pal);
-            if (isAnchorMode(pal)) applyAnchorInterp(pal);
+            if (!isAnchorMode(pal)) {
+                exitLInterp(pal);
+            } else {
+                applyAnchorInterp(pal);
+                if (pal.lInterp) applyLInterp(pal);
+            }
             updateSwatches(block, pal);
             syncEditor(block, pal);
             if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
@@ -2969,6 +3230,7 @@
         function togglePin(block, pal, index) {
             const n = pal.steps.length;
             if (n < 2) return;
+            const wasAnchor = isAnchorMode(pal);
             const step = pal.steps[index];
             if (!step.pinned) {
                 step.pinned = true;
@@ -2985,8 +3247,14 @@
                 const left = countPinned(pal);
                 if (left === 1) clearAllPins(pal);
             }
-            if (!hasPalettePins(pal)) pal.lInterpPinView = false;
-            if (isAnchorMode(pal)) applyAnchorInterp(pal);
+            if (!hasPalettePins(pal)) {
+                pal.lInterpPinView = false;
+                pal.hPinView = false;
+                pal.sPinView = false;
+            } else if (isAnchorMode(pal)) {
+                if (!wasAnchor) ensureAnchorPinDefaults(pal);
+                applyHsAnchorPalette(pal);
+            }
             if (pal.lInterp) applyLInterp(pal);
             updateSwatches(block, pal);
             syncEditor(block, pal);
@@ -3136,10 +3404,9 @@
             if (!row) return;
             if (row.dataset.chipsLocked === '1') {
                 delete row.dataset.chipsLocked;
-                row.classList.remove('chips-visible');
+                row.classList.remove('chips-visible', 'chips-locked');
             } else {
-                row.dataset.chipsLocked = '1';
-                row.classList.add('chips-visible');
+                lockSwatchChipsVisible(block);
             }
         }
 
@@ -3197,7 +3464,19 @@
                 nextChip.className = 'swatch-next-chip';
                 nextChip.title = 'Náhled dalšího kroku';
                 const nextStep = pal.steps[si + 1];
-                nextChip.style.background = nextStep?.hex ?? '#000000';
+                const chipFgHex = nextStep ? nextStep.hex : terminalChipFgHex(step.hex);
+                nextChip.style.background = chipFgHex;
+                const chipWcag = calcWcagRatio(chipFgHex, step.hex);
+                const chipLabel = document.createElement('span');
+                chipLabel.className = 'swatch-next-chip-label contrast-line';
+                chipLabel.textContent = chipWcag == null ? '—' : `WCAG ${chipWcag.toFixed(2)}:1`;
+                nextChip.appendChild(chipLabel);
+                nextChip.classList.add(isLightHex(chipFgHex) ? 'chip-light' : 'chip-dark');
+                if (nextStep) {
+                    nextChip.addEventListener('contextmenu', (e) => {
+                        showSwatchChipContextMenu(e, block, pal, si);
+                    });
+                }
                 wireSwatchNextChip(nextChip, block);
                 above.appendChild(nextChip);
 
@@ -3398,9 +3677,18 @@
         function refreshPaletteSliderTracks(block, pal) {
             ['h', 's', 'l'].forEach(prop => updateSliderTrack(block, pal, prop));
             if (pal.darkMode) updateSliderTrack(block, pal, 'gain');
-            const lWrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
-            if (lWrap?.classList.contains('l-pin-ramp-mode')) {
-                updateLPinMarkerPositions(block, pal);
+        }
+
+        function syncPropPinMarkers(block, pal, prop) {
+            const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
+            if (!wrap?.classList.contains('pin-ramp-mode')) return;
+            const anchors = getPinnedIndices(pal);
+            const pinKey = anchors.join(',');
+            const pinContainer = wrap.querySelector('.pin-handles');
+            if (pinContainer?.dataset.pinKey !== pinKey) {
+                renderPinMarkers(block, pal, prop);
+            } else {
+                updatePinMarkerPositions(block, pal, prop);
             }
         }
 
@@ -3431,8 +3719,8 @@
                         const prop = wrap.dataset.prop;
                         if (!block || !pal || !prop) continue;
                         updateSliderTrack(block, pal, prop);
-                        if (prop === 'l' && wrap.classList.contains('l-pin-ramp-mode')) {
-                            updateLPinMarkerPositions(block, pal);
+                        if (wrap.classList.contains('pin-ramp-mode')) {
+                            updatePinMarkerPositions(block, pal, prop);
                         }
                     }
                 });
@@ -3456,16 +3744,16 @@
                 hideRampHints(wrap);
                 return;
             }
-            if (prop === 'l' && wrap.classList.contains('l-pin-ramp-mode')) {
+            if (wrap.classList.contains('pin-ramp-mode')) {
                 hideRampHints(wrap);
                 const anchors = getPinnedIndices(pal);
                 const trackW = sliderTrackWidth(wrap);
                 if (trackW < 1) return;
                 if (anchors.length >= 2) {
-                    const l0 = pal.steps[anchors[0]].l;
-                    const lN = pal.steps[anchors[anchors.length - 1]].l;
-                    const p0 = valueToTrackPct(l0, 0, 100, trackW);
-                    const pN = valueToTrackPct(lN, 0, 100, trackW);
+                    const v0 = pal.steps[anchors[0]][prop];
+                    const vN = pal.steps[anchors[anchors.length - 1]][prop];
+                    const p0 = valueToTrackPct(v0, min, max, trackW);
+                    const pN = valueToTrackPct(vN, min, max, trackW);
                     fill.style.left = Math.min(p0, pN) + '%';
                     fill.style.width = Math.abs(pN - p0) + '%';
                 } else {
@@ -3497,39 +3785,25 @@
         function updateSliderMode(block, pal) {
             const whole = pal.selected === null;
             const anchorMode = isAnchorMode(pal);
-            if (anchorMode) {
-                pal.hRamp = false;
-                pal.sRamp = false;
-            }
-            ['h', 's'].forEach(prop => {
-                const ramp = prop === 'h' ? pal.hRamp : pal.sRamp;
+            ['h', 's', 'l'].forEach(prop => {
                 const wrap = block.querySelector(`.slider-ramp-wrap[data-prop="${prop}"]`);
-                const on = whole && ramp && !anchorMode;
-                wrap.classList.toggle('ramp-mode', on);
-                if (!on) hideRampHints(wrap);
+                if (!wrap) return;
+                const pinOn = usePropPinHandles(pal, prop);
+                let rampOn = false;
+                if (prop === 'l') {
+                    rampOn = whole && pal.lInterp && !pinOn;
+                } else {
+                    const ramp = prop === 'h' ? pal.hRamp : pal.sRamp;
+                    const endpointMode = anchorMode && !hsPinViewEnabled(pal, prop);
+                    rampOn = whole && !pinOn && (ramp || endpointMode);
+                }
+                wrap.classList.toggle('pin-ramp-mode', pinOn);
+                wrap.classList.toggle('ramp-mode', rampOn);
+                if (!rampOn) hideRampHints(wrap);
+                if (!pinOn) hidePinHints(wrap);
+                if (pinOn) syncPropPinMarkers(block, pal, prop);
                 updateSliderTrack(block, pal, prop);
             });
-            const lWrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
-            if (lWrap) {
-                const pinHandles = useLPinHandles(pal);
-                const rampOn = whole && pal.lInterp && !pinHandles;
-                const pinOn = whole && pal.lInterp && pinHandles;
-                lWrap.classList.toggle('ramp-mode', rampOn);
-                lWrap.classList.toggle('l-pin-ramp-mode', pinOn);
-                if (!rampOn) hideRampHints(lWrap);
-                if (!pinOn) hideLPinHints(lWrap);
-                if (pinOn) {
-                    const anchors = getPinnedIndices(pal);
-                    const pinKey = anchors.join(',');
-                    const pinContainer = lWrap.querySelector('.l-pin-handles');
-                    if (pinContainer?.dataset.pinKey !== pinKey) {
-                        renderLPinMarkers(block, pal);
-                    } else {
-                        updateLPinMarkerPositions(block, pal);
-                    }
-                }
-                updateSliderTrack(block, pal, 'l');
-            }
         }
 
         function updateSliderInactive(block, pal) {
@@ -3537,7 +3811,7 @@
             const anchorMode = isAnchorMode(pal);
             const sel = pal.selected;
             const step = sel != null ? pal.steps[sel] : null;
-            const hsInactive = anchorMode && (sel === null || !step?.pinned);
+            const hsInactive = anchorMode && sel !== null && !step?.pinned;
             const lInactive = whole && !pal.lInterp;
 
             ['h', 's', 'l'].forEach(prop => {
@@ -3556,6 +3830,13 @@
             labelL?.classList.toggle('l-await-interp', lInactive);
             labelL?.classList.toggle('l-interp-on', pal.lInterp);
             labelL?.classList.toggle('l-has-pins', hasPalettePins(pal));
+            labelL?.classList.toggle('slider-whole', whole);
+            const labelH = block.querySelector('.label-h');
+            labelH?.classList.toggle('has-pins', anchorMode);
+            labelH?.classList.toggle('slider-whole', whole);
+            const labelS = block.querySelector('.label-s');
+            labelS?.classList.toggle('has-pins', anchorMode);
+            labelS?.classList.toggle('slider-whole', whole);
         }
 
         function updateEditorSliderClasses(block, pal) {
@@ -3577,6 +3858,7 @@
             updateEditorSliderClasses(block, pal);
             updateSliderInactive(block, pal);
             updateValEditableState(block, pal);
+            syncPinViewToggleButtons(block, pal);
 
             if (pal.selected === null) {
                 const ref = pal.steps[0];
@@ -3585,10 +3867,7 @@
 
                 if (pal.lInterp) {
                     if (useLPinHandles(pal)) {
-                        const anchors = getPinnedIndices(pal);
-                        const vals = anchors.map(i => pal.steps[i].l);
-                        setValDisplay(block, pal, 'l',
-                            vals.map(v => v.toFixed(1)), '·');
+                        updatePinValDisplay(block, pal, 'l');
                     } else {
                         const { start, end } = rampSliderValues(pal, 'l');
                         const lWrap = block.querySelector('.slider-ramp-wrap[data-prop="l"]');
@@ -3602,7 +3881,10 @@
                 }
                 updateSliderTrack(block, pal, 'l');
 
-                if (pal.hRamp) {
+                if (usePropPinHandles(pal, 'h')) {
+                    updatePinValDisplay(block, pal, 'h');
+                    updateSliderTrack(block, pal, 'h');
+                } else if (pal.hRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 'h'))) {
                     const { start, end } = rampSliderValues(pal, 'h');
                     const wrap = block.querySelector('.slider-ramp-wrap[data-prop="h"]');
                     wrap.querySelector('.ramp-min').value = start;
@@ -3616,7 +3898,10 @@
                     updateSliderTrack(block, pal, 'h');
                 }
 
-                if (pal.sRamp) {
+                if (usePropPinHandles(pal, 's')) {
+                    updatePinValDisplay(block, pal, 's');
+                    updateSliderTrack(block, pal, 's');
+                } else if (pal.sRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 's'))) {
                     const { start, end } = rampSliderValues(pal, 's');
                     const wrap = block.querySelector('.slider-ramp-wrap[data-prop="s"]');
                     wrap.querySelector('.ramp-min').value = start;
@@ -3646,7 +3931,11 @@
         }
 
         function toggleRamp(block, pal, prop) {
-            if (isAnchorMode(pal) || pal.selected !== null) return;
+            if (pal.selected !== null) return;
+            if (isAnchorMode(pal)) {
+                if (prop === 'h' && hsPinViewEnabled(pal, 'h')) return;
+                if (prop === 's' && hsPinViewEnabled(pal, 's')) return;
+            }
             const key = prop === 'h' ? 'hRamp' : 'sRamp';
             pal[key] = !pal[key];
             if (pal[key]) {
@@ -3681,7 +3970,7 @@
                 maxIn.value = pal.steps[n - 1].l;
                 applyPropRamp(pal, 'l');
             } else {
-                if (isAnchorMode(pal)) return;
+                if (isAnchorMode(pal) && usePropPinHandles(pal, prop)) return;
                 if (which === 'min') pal.steps[0][prop] = v;
                 else pal.steps[n - 1][prop] = v;
                 minIn.value = pal.steps[0][prop];
@@ -3706,7 +3995,7 @@
             const anchorMode = isAnchorMode(pal);
             const sel = pal.selected;
             const step = sel != null ? pal.steps[sel] : null;
-            if ((prop === 'h' || prop === 's') && anchorMode && (sel === null || !step?.pinned)) {
+            if ((prop === 'h' || prop === 's') && anchorMode && sel !== null && !step?.pinned) {
                 return false;
             }
             return true;
@@ -3761,7 +4050,11 @@
             const v = clampSliderVal(prop, n);
 
             if (prop === 'h') {
-                if (pal.selected === null && pal.hRamp) {
+                if (pal.selected === null && usePropPinHandles(pal, 'h')) {
+                    onPinSlider(block, pal, 'h', idx, String(v));
+                    return true;
+                }
+                if (pal.selected === null && (pal.hRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 'h')))) {
                     onRampSlider(block, pal, 'h', idx === 0 ? 'min' : 'max', String(v));
                     return true;
                 }
@@ -3769,7 +4062,11 @@
                 return true;
             }
             if (prop === 's') {
-                if (pal.selected === null && pal.sRamp) {
+                if (pal.selected === null && usePropPinHandles(pal, 's')) {
+                    onPinSlider(block, pal, 's', idx, String(v));
+                    return true;
+                }
+                if (pal.selected === null && (pal.sRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 's')))) {
                     onRampSlider(block, pal, 's', idx === 0 ? 'min' : 'max', String(v));
                     return true;
                 }
@@ -3778,7 +4075,7 @@
             }
             if (prop === 'l') {
                 if (pal.lInterp && useLPinHandles(pal)) {
-                    onLPinSlider(block, pal, idx, String(v));
+                    onPinSlider(block, pal, 'l', idx, String(v));
                     return true;
                 }
                 if (pal.lInterp) {
@@ -3883,21 +4180,40 @@
             } else {
                 const step = pal.steps[pal.selected];
                 if (prop === 'l') {
-                    exitLInterp(pal);
-                    if (pal.darkMode) {
-                        const si = pal.selected;
-                        const g = dmGainAtIndex(pal, si);
-                        if (!pal.dmBaseL) pal.dmBaseL = [];
-                        pal.dmBaseL[si] = clampSliderVal('l', v - g);
-                        step.l = clampSliderVal('l', pal.dmBaseL[si] + g);
+                    if (anchorMode && step.pinned) {
+                        const lv = clampSliderVal('l', v);
+                        if (pal.darkMode) {
+                            const si = pal.selected;
+                            const g = dmGainAtIndex(pal, si);
+                            if (!pal.dmBaseL) pal.dmBaseL = [];
+                            pal.dmBaseL[si] = clampSliderVal('l', lv - g);
+                            step.l = clampSliderVal('l', pal.dmBaseL[si] + g);
+                        } else {
+                            step.l = lv;
+                        }
+                        if (pal.lInterp) {
+                            applyAnchorInterpL(pal);
+                        } else {
+                            step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
+                        }
                     } else {
-                        step.l = v;
+                        exitLInterp(pal);
+                        if (pal.darkMode) {
+                            const si = pal.selected;
+                            const g = dmGainAtIndex(pal, si);
+                            if (!pal.dmBaseL) pal.dmBaseL = [];
+                            pal.dmBaseL[si] = clampSliderVal('l', v - g);
+                            step.l = clampSliderVal('l', pal.dmBaseL[si] + g);
+                        } else {
+                            step.l = v;
+                        }
+                        step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
                     }
-                    step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
                 } else if (anchorMode) {
                     if (!step.pinned) return;
                     step[prop] = v;
-                    applyAnchorInterp(pal);
+                    if (prop === 'h' || prop === 's') applyAnchorInterpProp(pal, prop);
+                    else applyAnchorInterp(pal);
                 } else {
                     step[prop] = v;
                     step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
@@ -4206,42 +4522,53 @@
             editor.className = 'palette-editor';
             editor.innerHTML = `
                 <div class="sliders">
-                    <label>
+                    <div class="label-h slider-prop-label">
                         <span class="slider-top"><span class="slider-axis slider-axis-h">Hue</span><span class="val-wrap" data-prop="h"></span></span>
-                        <div class="slider-ramp-wrap" data-prop="h" title="Alt+klik: rampa začátek–konec">
-                            <span class="ramp-hint ramp-hint-min"></span>
-                            <span class="ramp-hint ramp-hint-max"></span>
-                            <div class="track-bg"></div>
-                            <div class="track-fill"></div>
-                            <input type="range" class="input-h ramp-single" min="0" max="360" step="1">
-                            <input type="range" class="ramp-min ramp-handle" min="0" max="360" step="1">
-                            <input type="range" class="ramp-max ramp-handle" min="0" max="360" step="1">
+                        <div class="prop-slider-stack">
+                            <div class="pin-mode-toggle" data-prop="h">
+                                <button type="button" class="pin-view-btn" data-prop="h">Bez pinů</button>
+                            </div>
+                            <div class="slider-ramp-wrap" data-prop="h" title="Alt+klik: rampa začátek–konec">
+                                <span class="ramp-hint ramp-hint-min"></span>
+                                <span class="ramp-hint ramp-hint-max"></span>
+                                <div class="pin-handles"></div>
+                                <div class="track-bg"></div>
+                                <div class="track-fill"></div>
+                                <input type="range" class="input-h ramp-single" min="0" max="360" step="1">
+                                <input type="range" class="ramp-min ramp-handle" min="0" max="360" step="1">
+                                <input type="range" class="ramp-max ramp-handle" min="0" max="360" step="1">
+                            </div>
                         </div>
-                    </label>
-                    <label>
+                    </div>
+                    <div class="label-s slider-prop-label">
                         <span class="slider-top"><span class="slider-axis slider-axis-s">Saturation</span><span class="val-wrap" data-prop="s"></span></span>
-                        <div class="slider-ramp-wrap" data-prop="s" title="Alt+klik: rampa začátek–konec">
-                            <span class="ramp-hint ramp-hint-min"></span>
-                            <span class="ramp-hint ramp-hint-max"></span>
-                            <div class="track-bg"></div>
-                            <div class="track-fill"></div>
-                            <input type="range" class="input-s ramp-single" min="0" max="100" step="0.1">
-                            <input type="range" class="ramp-min ramp-handle" min="0" max="100" step="0.1">
-                            <input type="range" class="ramp-max ramp-handle" min="0" max="100" step="0.1">
+                        <div class="prop-slider-stack">
+                            <div class="pin-mode-toggle" data-prop="s">
+                                <button type="button" class="pin-view-btn" data-prop="s">Bez pinů</button>
+                            </div>
+                            <div class="slider-ramp-wrap" data-prop="s" title="Alt+klik: rampa začátek–konec">
+                                <span class="ramp-hint ramp-hint-min"></span>
+                                <span class="ramp-hint ramp-hint-max"></span>
+                                <div class="pin-handles"></div>
+                                <div class="track-bg"></div>
+                                <div class="track-fill"></div>
+                                <input type="range" class="input-s ramp-single" min="0" max="100" step="0.1">
+                                <input type="range" class="ramp-min ramp-handle" min="0" max="100" step="0.1">
+                                <input type="range" class="ramp-max ramp-handle" min="0" max="100" step="0.1">
+                            </div>
                         </div>
-                    </label>
+                    </div>
                     <div class="label-l">
                         <span class="slider-top"><span class="slider-axis slider-axis-l">Lightness</span><span class="val-wrap" data-prop="l"></span></span>
                         <div class="l-slider-stack">
                             <div class="l-pin-mode-toggle">
-                                <button type="button" class="l-pin-view-btn" data-pin-view="pins">S piny</button>
-                                <button type="button" class="l-pin-view-btn" data-pin-view="endpoints">Bez pinů</button>
+                                <button type="button" class="pin-view-btn" data-prop="l">Bez pinů</button>
                             </div>
                             <button type="button" class="l-interpolate-cta">Interpolovat</button>
                             <div class="slider-ramp-wrap" data-prop="l">
                                 <span class="ramp-hint ramp-hint-min"></span>
                                 <span class="ramp-hint ramp-hint-max"></span>
-                                <div class="l-pin-handles"></div>
+                                <div class="pin-handles"></div>
                                 <div class="track-bg"></div>
                                 <div class="track-fill"></div>
                                 <input type="range" class="input-l ramp-single" min="0" max="100" step="0.1">
@@ -4259,15 +4586,15 @@
                 enterLInterp(block, pal);
             });
 
-            editor.querySelector('.l-pin-view-btn[data-pin-view="pins"]')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setLInterpPinView(block, pal, true);
-            });
-            editor.querySelector('.l-pin-view-btn[data-pin-view="endpoints"]')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setLInterpPinView(block, pal, false);
+            editor.querySelectorAll('.pin-view-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const prop = btn.dataset.prop;
+                    const withPins = !propPinViewEnabled(pal, prop);
+                    if (prop === 'l') setLInterpPinView(block, pal, withPins);
+                    else setHsPinView(block, pal, prop, withPins);
+                });
             });
 
             editor.querySelectorAll('.slider-ramp-wrap').forEach(wrap => {
@@ -4275,7 +4602,7 @@
                 let altClick = false;
                 let dragMoved = false;
                 let rampDrag = null;
-                let lPinDrag = null;
+                let pinDrag = null;
                 const hintMin = wrap.querySelector('.ramp-hint-min');
                 const hintMax = wrap.querySelector('.ramp-hint-max');
 
@@ -4290,22 +4617,22 @@
                 });
 
                 wrap.addEventListener('pointerdown', (e) => {
-                    if (e.target.closest('.l-interpolate-cta, .l-pin-mode-toggle')) return;
+                    if (e.target.closest('.l-interpolate-cta, .l-pin-mode-toggle, .pin-mode-toggle')) return;
                     if (e.button !== 0) return;
                     altClick = e.altKey;
                     dragMoved = false;
                     if (e.altKey) return;
 
-                    if (prop === 'l' && wrap.classList.contains('slider-inactive')) return;
+                    if (wrap.classList.contains('slider-inactive')) return;
 
-                    if (prop === 'l' && wrap.classList.contains('l-pin-ramp-mode')) {
-                        lPinDrag = pickLPinHandle(wrap, pal, e.clientX);
-                        if (lPinDrag < 0) return;
+                    if (wrap.classList.contains('pin-ramp-mode')) {
+                        pinDrag = pickPinHandle(wrap, pal, prop, e.clientX);
+                        if (pinDrag < 0) return;
                         e.preventDefault();
                         dragMoved = true;
                         wrap.setPointerCapture(e.pointerId);
-                        showLPinHints(wrap, lPinDrag);
-                        onLPinSlider(block, pal, lPinDrag, String(valueFromPointer(wrap, prop, e.clientX)));
+                        showPinHints(wrap, pinDrag);
+                        onPinSlider(block, pal, prop, pinDrag, String(valueFromPointer(wrap, prop, e.clientX)));
                         return;
                     }
 
@@ -4319,7 +4646,7 @@
                         return;
                     }
 
-                    if (prop === 'l') return;
+                    if (prop === 'l' && !wrap.classList.contains('ramp-mode')) return;
 
                     if (e.target.closest('input')) {
                         const onMove = () => { dragMoved = true; };
@@ -4330,12 +4657,12 @@
                     }
                 });
                 wrap.addEventListener('pointermove', (e) => {
-                    if (prop === 'l' && wrap.classList.contains('l-pin-ramp-mode')) {
-                        const hover = lPinDrag !== null ? lPinDrag : pickLPinHandle(wrap, pal, e.clientX);
-                        if (hover >= 0) showLPinHints(wrap, hover);
-                        else hideLPinHints(wrap);
-                        if (lPinDrag === null) return;
-                        onLPinSlider(block, pal, lPinDrag, String(valueFromPointer(wrap, prop, e.clientX)));
+                    if (wrap.classList.contains('pin-ramp-mode')) {
+                        const hover = pinDrag !== null ? pinDrag : pickPinHandle(wrap, pal, prop, e.clientX);
+                        if (hover >= 0) showPinHints(wrap, hover);
+                        else hidePinHints(wrap);
+                        if (pinDrag === null) return;
+                        onPinSlider(block, pal, prop, pinDrag, String(valueFromPointer(wrap, prop, e.clientX)));
                         return;
                     }
                     if (!wrap.classList.contains('ramp-mode')) {
@@ -4350,17 +4677,17 @@
                 });
                 wrap.addEventListener('pointerleave', () => {
                     showRampHint(null);
-                    if (prop === 'l') hideLPinHints(wrap);
+                    hidePinHints(wrap);
                 });
                 wrap.addEventListener('pointerup', () => {
                     rampDrag = null;
-                    lPinDrag = null;
-                    if (prop === 'l') hideLPinHints(wrap);
+                    pinDrag = null;
+                    hidePinHints(wrap);
                 });
                 wrap.addEventListener('lostpointercapture', () => {
                     rampDrag = null;
-                    lPinDrag = null;
-                    if (prop === 'l') hideLPinHints(wrap);
+                    pinDrag = null;
+                    hidePinHints(wrap);
                 });
 
                 wrap.addEventListener('click', (e) => {
@@ -4398,7 +4725,7 @@
 
             block.addEventListener('click', (e) => {
                 if (e.target.closest('.swatch')) return;
-                if (e.target.closest('.color-swatch-btn, .color-picker-overlay, .bezier-editor-popover, .interp-ctx-menu')) return;
+                if (e.target.closest('.color-swatch-btn, .color-picker-overlay, .bezier-editor-popover, .interp-ctx-menu, .swatch-ctx-menu')) return;
                 if (e.target.closest('.palette-editor, button, input, label')) return;
                 deselectPalette(block, pal);
             });
@@ -4415,6 +4742,7 @@
         function render() {
             closeColorPicker();
             closeInterpCtxMenu();
+            closeSwatchCtxMenu();
             closeBezierEditor();
             const scrollPalettes = palettes.length > 2;
             document.body.classList.toggle('scroll-palettes', scrollPalettes);
