@@ -145,7 +145,9 @@
         }
         .history-controls-btns button {
             min-width: 2.5rem;
-            padding: 0.35rem 0.65rem;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.85rem;
+            line-height: 1.2;
             background: #1a1a24;
             border: 1px solid #333;
             color: #94a3b8;
@@ -171,18 +173,20 @@
             border-radius: 6px;
             overflow: hidden;
         }
-        .color-space-toggle-btns button {
-            padding: 0.35rem 0.55rem;
-            font-size: 0.72rem;
+        .palette-toolbar .color-space-toggle-btns button {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.85rem;
+            line-height: 1.2;
             border-radius: 0;
+            border: none;
             background: #1a1a24;
             color: #94a3b8;
         }
-        .color-space-toggle-btns button:hover {
+        .palette-toolbar .color-space-toggle-btns button:hover {
             filter: none;
             color: #e2e8f0;
         }
-        .color-space-toggle-btns button.active {
+        .palette-toolbar .color-space-toggle-btns button.active {
             background: var(--accent);
             color: #fff;
         }
@@ -198,8 +202,15 @@
             max-width: 12rem;
             flex: 1 1 9.5rem;
         }
-        .dm-gain-field.dm-gain-hidden {
+        .dm-gain-field.dm-gain-hidden,
+        .dm-contrast-metric-field.dm-gain-hidden {
             display: none !important;
+        }
+        .dm-contrast-metric-field {
+            flex: 0 0 auto;
+        }
+        .dm-contrast-metric-field .color-space-toggle-btns button {
+            min-width: 2.85rem;
         }
         .dm-gain-field .slider-ramp-wrap {
             width: 100%;
@@ -337,18 +348,19 @@
         }
         .input-with-swatch input[type="text"] {
             width: 100%;
-            padding-right: 1.65rem;
+            padding-right: calc(0.4rem * 2 + 1.15rem);
         }
         .input-with-swatch.has-extra input[type="text"] {
-            padding-right: 3.15rem;
+            padding-right: calc(1.65rem + 0.4rem * 2 + 1.15rem);
         }
         .color-swatch-btn {
             position: absolute;
-            right: 3px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 1.15rem;
-            height: 1.15rem;
+            top: 0.4rem;
+            right: 0.4rem;
+            bottom: 0.4rem;
+            width: auto;
+            aspect-ratio: 1;
+            height: auto;
             padding: 0;
             border: 1px solid #555;
             border-radius: 3px;
@@ -357,7 +369,7 @@
             box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
         }
         .input-with-swatch.has-extra .color-swatch-btn {
-            right: 1.68rem;
+            right: calc(1.65rem + 0.4rem);
         }
         .color-swatch-btn:hover {
             border-color: #94a3b8;
@@ -649,11 +661,53 @@
             width: 100%;
             text-align: center;
         }
+        .swatch-contrast-slot {
+            --contrast-row-h: calc(0.72rem * 1.2);
+            min-height: var(--contrast-row-h);
+            height: var(--contrast-row-h);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
         .swatch .contrast-line {
             font-size: 0.72rem;
             opacity: 0.85;
             letter-spacing: 0.02em;
             line-height: 1.2;
+        }
+        .swatch .contrast-line.contrast-editable {
+            cursor: text;
+        }
+        .swatch .contrast-line.contrast-editable:hover {
+            opacity: 1;
+        }
+        .swatch .contrast-input {
+            box-sizing: border-box;
+            width: 4.75rem;
+            max-width: 100%;
+            height: var(--contrast-row-h);
+            margin: 0;
+            padding: 0 0.15rem;
+            font-size: 0.72rem;
+            line-height: 1.2;
+            font-family: inherit;
+            letter-spacing: 0.02em;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.35);
+            color: inherit;
+            outline: none;
+        }
+        .swatch.light .contrast-input {
+            background: rgba(255, 255, 255, 0.65);
+            border-color: rgba(0, 0, 0, 0.2);
+            color: #0f172a;
+        }
+        .swatch .contrast-input.error {
+            border-color: #f43f5e;
         }
         .palette-row {
             display: flex;
@@ -1227,7 +1281,7 @@
     <script type="module">
         import { Hsluv } from 'https://esm.sh/hsluv@1.0.1';
         import { Hct } from 'https://esm.sh/@material/material-color-utilities@0.3.0';
-        import { calcContrast } from 'https://esm.sh/apcach@0.6.4';
+        import { sRGBtoY } from 'https://esm.sh/apca-w3@0.1.9';
 
         const COLOR_SPACE = 'srgb';
         const L_START = 95;
@@ -1769,18 +1823,58 @@
             return y == null ? true : y > 0.55;
         }
 
+        const APCA_W3 = {
+            blkThrs: 0.022,
+            blkClmp: 1.414,
+            scaleBoW: 1.14,
+            loBoWoffset: 0.027,
+            scaleWoB: 1.14,
+            loWoBoffset: 0.027,
+            normBG: 0.56,
+            normTXT: 0.57,
+            revTXT: 0.62,
+            revBG: 0.65,
+            loClip: 0.1,
+            deltaYmin: 0.0005
+        };
+
+        function apcaYFromHex(hex) {
+            const rgb = hexToRgb(hex);
+            if (!rgb) return null;
+            return sRGBtoY([rgb[0], rgb[1], rgb[2], 1.0]);
+        }
+
+        function apcaSoftClampY(y) {
+            if (y >= APCA_W3.blkThrs) return y;
+            return Math.pow(APCA_W3.blkThrs - y, APCA_W3.blkClmp) + y;
+        }
+
+        function apcaLcUnclamped(txtY, bgY) {
+            const t = apcaSoftClampY(txtY);
+            const b = apcaSoftClampY(bgY);
+            if (Math.abs(b - t) < 1e-9) return 0;
+            let c;
+            if (b > t) {
+                c = (Math.pow(b, APCA_W3.normBG) - Math.pow(t, APCA_W3.normTXT)) * APCA_W3.scaleBoW;
+                c = (c - APCA_W3.loBoWoffset) * 100;
+            } else {
+                c = (Math.pow(b, APCA_W3.revBG) - Math.pow(t, APCA_W3.revTXT)) * APCA_W3.scaleWoB;
+                c = (c + APCA_W3.loWoBoffset) * 100;
+            }
+            return c;
+        }
+
+        /** W3 APCA bez loClip/deltaYmin – plný rozsah pro ladění palety. */
         function getApcaContrast(fgHex, bgHex) {
-            try {
-                const lc = calcContrast(fgHex, bgHex, 'apca', COLOR_SPACE);
-                if (lc == null || Number.isNaN(lc)) return null;
-                if (lc < 0) return lc;
-                const mag = Math.abs(lc);
-                const fgY = relativeLuminance(fgHex);
-                const bgY = relativeLuminance(bgHex);
-                if (fgY == null || bgY == null) return mag;
-                if (mag < 0.05) return 0;
-                return fgY > bgY ? -mag : mag;
-            } catch { return null; }
+            const txtY = apcaYFromHex(fgHex);
+            const bgY = apcaYFromHex(bgHex);
+            if (txtY == null || bgY == null) return null;
+            const lc = apcaLcUnclamped(txtY, bgY);
+            return Number.isNaN(lc) ? null : lc;
+        }
+
+        function formatApcaValue(value) {
+            return value === null ? '—' : `APCA ${value.toFixed(2)}`;
         }
 
         function calcWcagRatio(fgHex, bgHex) {
@@ -1814,6 +1908,92 @@
                 }
             }
             return Math.round(Math.max(0, Math.min(100, bestL)) * 10) / 10;
+        }
+
+        function solveLForApca(h, s, targetLc, bgHex, hintL) {
+            if (targetLc == null || !hexToRgb(bgHex)) return hintL;
+            let bestL = hintL;
+            let bestErr = Infinity;
+            for (let i = 0; i <= 1000; i++) {
+                const l = Math.round(i) / 10;
+                let ch = s;
+                if (colorSpace === 'hct') {
+                    ch = clampHctChromaForStep(h, s, l);
+                }
+                const hex = modelToHex(h, ch, l);
+                if (!hex) continue;
+                const lc = getApcaContrast(hex, bgHex);
+                if (lc == null) continue;
+                const err = Math.abs(lc - targetLc);
+                if (err < bestErr) {
+                    bestErr = err;
+                    bestL = l;
+                }
+            }
+            return Math.round(Math.max(0, Math.min(100, bestL)) * 10) / 10;
+        }
+
+        function parseContrastTarget(kind, raw) {
+            const s = String(raw).trim();
+            if (kind === 'wcag') {
+                const n = parseFloat(s.replace(/wcag/gi, '').replace(/:1/gi, '').trim());
+                return Number.isNaN(n) || n < 1 ? null : n;
+            }
+            const n = parseFloat(s.replace(/apca/gi, '').trim());
+            return Number.isNaN(n) ? null : n;
+        }
+
+        function cancelContrastEdit(pal) {
+            pal.contrastEditIndex = null;
+            pal.contrastEditKind = null;
+        }
+
+        function applyStepContrastTarget(block, pal, index, kind, target) {
+            const step = pal.steps[index];
+            if (!step || !canEditStepHex(pal, step) || !hexToRgb(pal.bgHex)) return false;
+            pushHistory();
+            setSelection(pal, index);
+            const newL = kind === 'wcag'
+                ? solveLForWcag(step.h, step.s, target, pal.bgHex, step.l)
+                : solveLForApca(step.h, step.s, target, pal.bgHex, step.l);
+            if (pal.darkMode) {
+                commitDarkModeBaseL(pal, index, newL);
+                const targets = kind === 'apca' ? pal.darkModeApcaTargets : pal.darkModeWcagTargets;
+                if (targets) targets[index] = target;
+            } else {
+                step.l = newL;
+                syncStepHctChroma(step);
+                step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
+            }
+            if (!isAnchorMode(pal)) {
+                exitLInterp(pal);
+            } else {
+                applyAnchorInterpAll(pal);
+            }
+            cancelContrastEdit(pal);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
+            return true;
+        }
+
+        function startContrastEdit(block, pal, index, kind) {
+            const step = pal.steps[index];
+            if (!step || !canEditStepHex(pal, step)) return;
+            cancelHexEdit(pal);
+            pal.contrastEditIndex = index;
+            pal.contrastEditKind = kind;
+            setSelection(pal, index);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
+            requestAnimationFrame(() => {
+                const input = block.querySelector(
+                    `.swatch[data-step="${index}"] .contrast-input[data-kind="${kind}"]`
+                );
+                if (!input) return;
+                input.focus();
+                input.select();
+            });
         }
 
         function setStepLTone(pal, i, l) {
@@ -2545,104 +2725,159 @@
             applyDmGainStep(pal, i);
         }
 
-        function recalcStepsLForDarkMode(pal) {
-            if (!pal.darkMode || !pal.darkModeWcagTargets?.length) return;
-            if (!hexToRgb(pal.bgHex)) return;
-            pal.steps.forEach((step, i) => {
-                const target = pal.darkModeWcagTargets[i];
-                if (target == null) return;
-                const baseL = solveLForWcag(step.h, step.s, target, pal.bgHex, step.l);
-                commitDarkModeBaseL(pal, i, baseL);
-            });
+        /** APCA cíl pro solver — při jiné polaritě pozadí než master obrátit znaménko. */
+        function apcaTargetForDmBg(rawLc, masterBg, dmBg) {
+            if (rawLc == null || !hexToRgb(masterBg) || !hexToRgb(dmBg)) return rawLc;
+            if (isLightHex(masterBg) === isLightHex(dmBg)) return rawLc;
+            if (rawLc === 0) return 0;
+            return -rawLc;
         }
 
-        function captureDarkModeWcagTargets(pal) {
+        function masterContrastsAt(i) {
             const primary = palettes[0];
-            if (!primary) return;
-            const refBg = primary.bgHex;
-            if (!hexToRgb(refBg)) return;
-            pal.darkModeRefBg = refBg;
-            pal.darkModeWcagTargets = pal.steps.map((_, i) => {
-                const pi = Math.min(i, primary.steps.length - 1);
-                return calcWcagRatio(primary.steps[pi].hex, refBg);
-            });
-        }
-
-        function primaryStepSnapAt(i) {
-            const primary = palettes[0];
-            const pi = Math.min(i, primary.steps.length - 1);
-            const s = primary.steps[pi];
-            return { h: s.h, s: s.s, l: s.l };
-        }
-
-        function primarySnapEqual(a, b) {
-            if (!a || !b) return false;
-            return Math.round(a.h) === Math.round(b.h) &&
-                Math.round(a.s * 10) === Math.round(b.s * 10) &&
-                Math.round(a.l * 10) === Math.round(b.l * 10);
-        }
-
-        function rememberDarkModePrimarySnap(pal, i) {
-            if (!pal.dmPrimarySnap) pal.dmPrimarySnap = [];
-            pal.dmPrimarySnap[i] = primaryStepSnapAt(i);
-        }
-
-        function syncDarkModeStepFromPrimary(pal, i) {
-            const primary = palettes[0];
-            if (!primary || !pal.steps[i]) return;
+            if (!primary) return { wcag: null, apca: null };
             const pi = Math.min(i, primary.steps.length - 1);
             const pStep = primary.steps[pi];
-            const step = pal.steps[i];
-            step.h = pStep.h;
-            step.s = pStep.s;
-            if (!pal.darkModeWcagTargets?.length) captureDarkModeWcagTargets(pal);
-            const refBg = pal.darkModeRefBg || primary.bgHex;
-            pal.darkModeWcagTargets[i] = calcWcagRatio(pStep.hex, refBg);
-            const baseL = solveLForWcag(step.h, step.s, pal.darkModeWcagTargets[i], pal.bgHex, step.l);
-            commitDarkModeBaseL(pal, i, baseL);
-            rememberDarkModePrimarySnap(pal, i);
+            const bg = primary.bgHex;
+            return {
+                wcag: calcWcagRatio(pStep.hex, bg),
+                apca: getApcaContrast(pStep.hex, bg)
+            };
+        }
+
+        function masterContrastSnapEqual(a, b) {
+            if (!a || !b) return false;
+            const wOk = (a.wcag == null && b.wcag == null) ||
+                (a.wcag != null && b.wcag != null && Math.abs(a.wcag - b.wcag) < 0.01);
+            const aOk = (a.apca == null && b.apca == null) ||
+                (a.apca != null && b.apca != null && Math.abs(a.apca - b.apca) < 0.05);
+            return wOk && aOk;
+        }
+
+        function dmMetric(pal) {
+            return pal.dmContrastMetric === 'apca' ? 'apca' : 'wcag';
+        }
+
+        function masterContrastChanged(prev, cur, metric) {
+            if (!cur) return false;
+            if (!prev) return true;
+            if (metric === 'apca') {
+                if (cur.apca == null && prev.apca == null) return false;
+                if (cur.apca == null || prev.apca == null) return true;
+                return Math.abs(cur.apca - prev.apca) >= 0.05;
+            }
+            if (cur.wcag == null && prev.wcag == null) return false;
+            if (cur.wcag == null || prev.wcag == null) return true;
+            return Math.abs(cur.wcag - prev.wcag) >= 0.01;
+        }
+
+        function snapshotDarkModeColorsFromPrimary(pal) {
+            const primary = palettes[0];
+            if (!primary) return;
+            if (!pal.dmBaseL) pal.dmBaseL = [];
+            pal.steps.forEach((step, i) => {
+                const pi = Math.min(i, primary.steps.length - 1);
+                const ps = primary.steps[pi];
+                step.h = ps.h;
+                step.s = ps.s;
+                step.l = ps.l;
+                step.hex = ps.hex;
+                step.pinned = !!ps.pinned;
+                pal.dmBaseL[i] = clampSliderVal('l', ps.l);
+            });
+            applyDmGainAll(pal);
+        }
+
+        function captureDarkModeContrastTargets(pal) {
+            const primary = palettes[0];
+            if (!primary || !hexToRgb(primary.bgHex)) return;
+            pal.darkModeRefBg = primary.bgHex;
+            pal.darkModeWcagTargets = [];
+            pal.darkModeApcaTargets = [];
+            pal.dmMasterContrastSnap = [];
+            pal.steps.forEach((_, i) => {
+                const c = masterContrastsAt(i);
+                pal.darkModeWcagTargets[i] = c.wcag;
+                pal.darkModeApcaTargets[i] = c.apca;
+                pal.dmMasterContrastSnap[i] = { wcag: c.wcag, apca: c.apca };
+            });
         }
 
         function recalcDarkModeStepL(pal, i) {
             const step = pal.steps[i];
-            const target = pal.darkModeWcagTargets?.[i];
-            if (!step || target == null || !hexToRgb(pal.bgHex)) return;
+            if (!step || !hexToRgb(pal.bgHex)) return;
             const hintL = pal.dmBaseL?.[i] ?? step.l;
-            const baseL = solveLForWcag(step.h, step.s, target, pal.bgHex, hintL);
+            const metric = dmMetric(pal);
+            let baseL = hintL;
+            if (metric === 'apca') {
+                const apcaT = apcaTargetForDmBg(
+                    pal.darkModeApcaTargets?.[i],
+                    pal.darkModeRefBg,
+                    pal.bgHex
+                );
+                if (apcaT != null) {
+                    baseL = solveLForApca(step.h, step.s, apcaT, pal.bgHex, hintL);
+                }
+            } else {
+                const wcagT = pal.darkModeWcagTargets?.[i];
+                if (wcagT != null) {
+                    baseL = solveLForWcag(step.h, step.s, wcagT, pal.bgHex, hintL);
+                }
+            }
             commitDarkModeBaseL(pal, i, baseL);
         }
 
-        function syncDarkModePaletteFromPrimary(pal, full = false) {
-            if (!pal.darkMode || isPrimaryPalette(pal)) return;
+        function recalcStepsLForDarkMode(pal) {
+            if (!pal.darkMode || !hexToRgb(pal.bgHex)) return;
+            const metric = dmMetric(pal);
+            if (metric === 'apca') {
+                if (!pal.darkModeApcaTargets?.length) return;
+            } else if (!pal.darkModeWcagTargets?.length) {
+                return;
+            }
+            pal.steps.forEach((_, i) => recalcDarkModeStepL(pal, i));
+        }
+
+        function initDarkModeFromPrimary(pal) {
+            snapshotDarkModeColorsFromPrimary(pal);
+            captureDarkModeContrastTargets(pal);
+            pal.steps.forEach((_, i) => recalcDarkModeStepL(pal, i));
+        }
+
+        function syncDarkModeContrastsFromPrimary(pal) {
+            if (!pal.darkMode) return;
             const primary = palettes[0];
             if (!primary || !hexToRgb(primary.bgHex)) return;
+            if (!pal.darkModeWcagTargets?.length) captureDarkModeContrastTargets(pal);
 
-            const bg = primary.bgHex;
-            const bgChanged = full || pal.dmPrimaryBgSnap !== bg;
-            const lenMismatch = !pal.dmPrimarySnap?.length ||
-                pal.dmPrimarySnap.length !== pal.steps.length;
-
-            if (full || lenMismatch) {
-                pal.darkModeRefBg = bg;
-                captureDarkModeWcagTargets(pal);
-                pal.steps.forEach((_, i) => syncDarkModeStepFromPrimary(pal, i));
-                pal.dmPrimaryBgSnap = bg;
-            } else {
-                if (bgChanged) {
-                    pal.darkModeRefBg = bg;
-                    captureDarkModeWcagTargets(pal);
-                    pal.dmPrimaryBgSnap = bg;
-                }
-                pal.steps.forEach((_, i) => {
-                    const stepChanged = !primarySnapEqual(pal.dmPrimarySnap[i], primaryStepSnapAt(i));
-                    if (stepChanged) {
-                        syncDarkModeStepFromPrimary(pal, i);
-                    } else if (bgChanged) {
-                        recalcDarkModeStepL(pal, i);
-                    }
-                });
+            const masterBg = primary.bgHex;
+            if (pal.darkModeRefBg !== masterBg) {
+                pal.darkModeRefBg = masterBg;
+                pal.steps.forEach((_, i) => recalcDarkModeStepL(pal, i));
             }
 
+            const metric = dmMetric(pal);
+            pal.steps.forEach((_, i) => {
+                const cur = masterContrastsAt(i);
+                const prev = pal.dmMasterContrastSnap?.[i];
+                if (!masterContrastChanged(prev, cur, metric)) return;
+                pal.darkModeWcagTargets[i] = cur.wcag;
+                pal.darkModeApcaTargets[i] = cur.apca;
+                if (!pal.dmMasterContrastSnap) pal.dmMasterContrastSnap = [];
+                pal.dmMasterContrastSnap[i] = { wcag: cur.wcag, apca: cur.apca };
+                recalcDarkModeStepL(pal, i);
+            });
+        }
+
+        function syncDarkModePaletteFromPrimary(pal, fullSnapshot = false) {
+            if (!pal.darkMode || isPrimaryPalette(pal)) return;
+            const lenMismatch = !pal.dmMasterContrastSnap?.length ||
+                pal.dmMasterContrastSnap.length !== pal.steps.length;
+            if (fullSnapshot || lenMismatch) {
+                initDarkModeFromPrimary(pal);
+            } else {
+                syncDarkModeContrastsFromPrimary(pal);
+            }
             const block = getPaletteBlockForPal(pal);
             if (block) applyDarkModeUi(block, pal, getToolbarBgInput(block));
         }
@@ -2658,18 +2893,39 @@
             syncAllDarkModeFromPrimary();
         }
 
-        function updateDmGainVisibility(block, pal) {
-            const field = block.querySelector('.dm-gain-field');
-            if (!field) return;
+        function updateDmDarkToolbarVisibility(block, pal) {
             const show = !!pal.darkMode;
-            field.hidden = !show;
-            field.classList.toggle('dm-gain-hidden', !show);
+            block.querySelectorAll('.dm-gain-field, .dm-contrast-metric-field').forEach(field => {
+                field.hidden = !show;
+                field.classList.toggle('dm-gain-hidden', !show);
+            });
+        }
+
+        function syncDmContrastMetricUi(block, pal) {
+            const field = block.querySelector('.dm-contrast-metric-field');
+            if (!field) return;
+            const metric = dmMetric(pal);
+            field.querySelectorAll('[data-dm-metric]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.dmMetric === metric);
+            });
+        }
+
+        function setDmContrastMetric(block, pal, metric) {
+            if (!pal.darkMode) return;
+            const next = metric === 'apca' ? 'apca' : 'wcag';
+            if (dmMetric(pal) === next) return;
+            pushHistory();
+            pal.dmContrastMetric = next;
+            pal.steps.forEach((_, i) => recalcDarkModeStepL(pal, i));
+            syncDmContrastMetricUi(block, pal);
+            updateSwatches(block, pal);
+            syncEditor(block, pal);
         }
 
         function syncDmGainUi(block, pal) {
             const wrap = block.querySelector('.slider-ramp-wrap[data-prop="gain"]');
             if (!wrap) return;
-            updateDmGainVisibility(block, pal);
+            updateDmDarkToolbarVisibility(block, pal);
             if (!pal.darkMode) return;
             wrap.classList.toggle('ramp-mode', !!pal.dmGainRamp);
             if (pal.dmGainRamp) {
@@ -2704,24 +2960,26 @@
             updateSwatches(block, pal);
             syncEditor(block, pal);
             syncDmGainUi(block, pal);
+            syncDmContrastMetricUi(block, pal);
         }
 
         function setDarkMode(block, pal, on, bgInput, darkBtn) {
             pushHistory();
             if (on) {
                 pal.darkMode = true;
+                if (!pal.dmContrastMetric) pal.dmContrastMetric = 'wcag';
                 pal.bgHex = '#000000';
-                syncDarkModePaletteFromPrimary(pal, true);
+                initDarkModeFromPrimary(pal);
             } else {
                 pal.darkMode = false;
                 pal.darkModeWcagTargets = null;
+                pal.darkModeApcaTargets = null;
                 pal.darkModeRefBg = null;
-                pal.dmPrimarySnap = null;
-                pal.dmPrimaryBgSnap = null;
+                pal.dmMasterContrastSnap = null;
                 pal.dmBaseL = null;
             }
             if (darkBtn) darkBtn.classList.toggle('active', pal.darkMode);
-            updateDmGainVisibility(block, pal);
+            updateDmDarkToolbarVisibility(block, pal);
             applyDarkModeUi(block, pal, bgInput);
         }
 
@@ -2802,6 +3060,7 @@
                 pal.hexEditIndex = null;
                 delete pal.hexEditT;
                 delete pal.selectedT;
+                if (!pal.dmContrastMetric) pal.dmContrastMetric = 'wcag';
             });
         }
 
@@ -3039,6 +3298,8 @@
                 })),
                 selected: null,
                 hexEditIndex: null,
+                contrastEditIndex: null,
+                contrastEditKind: null,
                 baseHex: baseHex || DEFAULT_HEX,
                 bgHex: bgHex || DEFAULT_BG,
                 bgPreview: false,
@@ -3050,10 +3311,11 @@
                 lInterpPinView: false,
                 valEdit: null,
                 darkMode: false,
+                dmContrastMetric: 'wcag',
                 darkModeWcagTargets: null,
+                darkModeApcaTargets: null,
                 darkModeRefBg: null,
-                dmPrimarySnap: null,
-                dmPrimaryBgSnap: null,
+                dmMasterContrastSnap: null,
                 dmGain: 0,
                 dmGainRamp: false,
                 dmGainStart: 0,
@@ -3415,11 +3677,13 @@
         function cancelHexEdit(pal) {
             pal.hexEditIndex = null;
             delete pal.hexEditT;
+            cancelContrastEdit(pal);
         }
 
         function startHexEdit(block, pal, index) {
             const step = pal.steps[index];
             if (!step || !canEditStepHex(pal, step)) return;
+            cancelContrastEdit(pal);
             const n = pal.steps.length;
             pal.hexEditIndex = index;
             pal.hexEditT = stepPinT(step, index, n);
@@ -3517,6 +3781,7 @@
 
             pal.valEdit = null;
             pal.hexEditIndex = null;
+            cancelContrastEdit(pal);
 
             if (isAnchorMode(pal)) {
                 applyAnchorInterpAll(pal);
@@ -3791,13 +4056,76 @@
                 const wcag = calcWcagRatio(step.hex, pal.bgHex);
                 const contrasts = document.createElement('div');
                 contrasts.className = 'swatch-contrasts';
-                const apcaEl = document.createElement('span');
-                apcaEl.className = 'contrast-line';
-                apcaEl.textContent = apca === null ? '—' : `APCA ${apca.toFixed(1)}`;
-                const wcagEl = document.createElement('span');
-                wcagEl.className = 'contrast-line';
-                wcagEl.textContent = wcag === null ? '—' : `WCAG ${wcag.toFixed(2)}:1`;
-                contrasts.append(apcaEl, wcagEl);
+
+                function appendContrastLine(kind, label, editValue) {
+                    const slot = document.createElement('div');
+                    slot.className = 'swatch-contrast-slot';
+                    const editing = pal.contrastEditIndex === si && pal.contrastEditKind === kind;
+                    if (editing) {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'contrast-input';
+                        input.dataset.kind = kind;
+                        input.value = editValue;
+                        const commit = () => {
+                            const target = parseContrastTarget(kind, input.value);
+                            if (target == null) {
+                                input.classList.add('error');
+                                setTimeout(() => input.classList.remove('error'), 600);
+                                return;
+                            }
+                            if (!applyStepContrastTarget(block, pal, si, kind, target)) {
+                                input.classList.add('error');
+                                setTimeout(() => input.classList.remove('error'), 600);
+                            }
+                        };
+                        input.onkeydown = (e) => {
+                            e.stopPropagation();
+                            if (e.key === 'Enter') { e.preventDefault(); commit(); }
+                            if (e.key === 'Escape') {
+                                e.preventDefault();
+                                cancelContrastEdit(pal);
+                                updateSwatches(block, pal);
+                                syncEditor(block, pal);
+                            }
+                        };
+                        input.onblur = () => {
+                            requestAnimationFrame(() => {
+                                if (pal.contrastEditIndex !== si || pal.contrastEditKind !== kind) return;
+                                commit();
+                            });
+                        };
+                        input.onclick = (e) => e.stopPropagation();
+                        slot.appendChild(input);
+                    } else {
+                        const line = document.createElement('span');
+                        line.className = 'contrast-line';
+                        if (canEditHex) {
+                            line.classList.add('contrast-editable');
+                            line.title = kind === 'wcag'
+                                ? 'Klikni a zadej cílový WCAG poměr (např. 4.5)'
+                                : 'Klikni a zadej cílové APCA Lc (např. 25 nebo -25)';
+                            line.onclick = (e) => {
+                                e.stopPropagation();
+                                startContrastEdit(block, pal, si, kind);
+                            };
+                        }
+                        line.textContent = label;
+                        slot.appendChild(line);
+                    }
+                    contrasts.appendChild(slot);
+                }
+
+                appendContrastLine(
+                    'apca',
+                    formatApcaValue(apca),
+                    apca == null ? '' : apca.toFixed(2)
+                );
+                appendContrastLine(
+                    'wcag',
+                    wcag === null ? '—' : `WCAG ${wcag.toFixed(2)}:1`,
+                    wcag == null ? '' : wcag.toFixed(2)
+                );
 
                 el.append(head, above, center, below, contrasts);
 
@@ -4432,8 +4760,10 @@
             const hadSel = pal.selected !== null;
             const hadEdit = pal.hexEditIndex != null;
             const hadValEdit = pal.valEdit != null;
-            if (!hadSel && !hadEdit && !hadValEdit) return;
+            const hadContrastEdit = pal.contrastEditIndex != null;
+            if (!hadSel && !hadEdit && !hadValEdit && !hadContrastEdit) return;
             cancelHexEdit(pal);
+            cancelContrastEdit(pal);
             endValEditDom(block, pal);
             setSelection(pal, null);
             updateSwatches(block, pal);
@@ -4581,7 +4911,7 @@
                 pushHistory();
                 generatePalette(pal, true);
                 if (pal.darkMode) {
-                    syncDarkModePaletteFromPrimary(pal, true);
+                    syncDarkModePaletteFromPrimary(pal, false);
                 } else if (isPrimaryPalette(pal)) {
                     afterPrimaryPaletteChange();
                 }
@@ -4599,6 +4929,24 @@
                 darkModeBtn.className = 'dark-mode-btn' + (pal.darkMode ? ' active' : '');
                 darkModeBtn.textContent = 'Dark Mode';
                 darkModeBtn.onclick = () => setDarkMode(block, pal, !pal.darkMode, bgInput, darkModeBtn);
+
+                const dmContrastMetricField = document.createElement('div');
+                dmContrastMetricField.className = 'toolbar-field dm-contrast-metric-field' +
+                    (pal.darkMode ? '' : ' dm-gain-hidden');
+                dmContrastMetricField.hidden = !pal.darkMode;
+                dmContrastMetricField.append('Kontrast');
+                const dmMetricBtns = document.createElement('div');
+                dmMetricBtns.className = 'color-space-toggle-btns';
+                [['wcag', 'WCAG'], ['apca', 'APCA']].forEach(([id, text]) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.dataset.dmMetric = id;
+                    btn.textContent = text;
+                    btn.classList.toggle('active', dmMetric(pal) === id);
+                    btn.onclick = () => setDmContrastMetric(block, pal, id);
+                    dmMetricBtns.appendChild(btn);
+                });
+                dmContrastMetricField.appendChild(dmMetricBtns);
 
                 const dmGainField = document.createElement('label');
                 dmGainField.className = 'toolbar-field dm-gain-field' +
@@ -4711,8 +5059,11 @@
                     startValEdit(block, pal, 'gain', idx);
                 });
 
-                toolbar.append(paletteField, bgField, generateBtn, darkModeBtn, dmGainField);
+                toolbar.append(
+                    paletteField, bgField, generateBtn, darkModeBtn, dmContrastMetricField, dmGainField
+                );
                 syncDmGainUi(block, pal);
+                syncDmContrastMetricUi(block, pal);
             } else {
                 toolbar.append(paletteField, bgField, generateBtn);
             }
