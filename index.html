@@ -3481,26 +3481,48 @@
             return idx;
         }
 
+        function defaultStepL(i, n, seedL) {
+            return n === 1 ? seedL : L_START + (L_END - L_START) * (i / (n - 1));
+        }
+
+        function isPlaceholderPalette(steps) {
+            return steps.length > 0 && steps.every(s =>
+                s.hex === '#808080' && s.h === 0 && s.s === 0
+            );
+        }
+
         function generatePalette(pal, selectClosest = false) {
             const seed = hexToModel(pal.baseHex);
             if (!seed) return;
 
             const n = Math.max(2, pal.steps.length);
-            pal.steps.length = n;
+            const oldSteps = pal.steps.slice(0, n);
+            const useDefaultL = isPlaceholderPalette(oldSteps);
 
             pal.steps = Array.from({ length: n }, (_, i) => {
-                const l = n === 1 ? seed.l : L_START + (L_END - L_START) * (i / (n - 1));
-                const hex = modelToHex(seed.h, seed.s, l) ?? pal.baseHex;
-                return { h: seed.h, s: seed.s, l, hex, pinned: false };
+                const old = oldSteps[i];
+                const l = useDefaultL
+                    ? defaultStepL(i, n, seed.l)
+                    : (old?.l ?? defaultStepL(i, n, seed.l));
+                const h = seed.h;
+                let s = seed.s;
+                if (colorSpace === 'hct') {
+                    s = clampHctChromaForStep(h, s, l);
+                }
+                const hex = modelToHex(h, s, l) ?? pal.baseHex;
+                const step = { h, s, l, hex, pinned: !!old?.pinned };
+                if (old?.pinT != null) step.pinT = old.pinT;
+                return step;
             });
 
-            pal.hRamp = false;
-            pal.sRamp = false;
-            pal.lInterp = false;
-            pal.lInterpPinView = false;
             pal.valEdit = null;
             pal.hexEditIndex = null;
-            clearAllPins(pal);
+
+            if (isAnchorMode(pal)) {
+                applyAnchorInterpAll(pal);
+            } else {
+                refreshStepHex(pal);
+            }
 
             if (selectClosest) {
                 setSelection(pal, findClosestStepIdx(pal.steps, seed));
