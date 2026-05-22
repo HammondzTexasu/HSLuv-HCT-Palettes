@@ -987,6 +987,35 @@
             width: 100%;
             background: #334155;
         }
+        .slider-ramp-wrap .track-available,
+        .slider-ramp-wrap .track-dead {
+            display: none;
+        }
+        .slider-ramp-wrap.hct-chroma-cap .track-bg {
+            display: none;
+        }
+        .slider-ramp-wrap.hct-chroma-cap .track-available,
+        .slider-ramp-wrap.hct-chroma-cap .track-dead {
+            display: block;
+            position: absolute;
+            top: 50%;
+            height: 4px;
+            border-radius: 2px;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        .slider-ramp-wrap.hct-chroma-cap .track-available {
+            background: #334155;
+            z-index: 0;
+        }
+        .slider-ramp-wrap.hct-chroma-cap .track-dead {
+            background: #334155;
+            opacity: 0.35;
+            z-index: 0;
+        }
+        .slider-ramp-wrap.hct-chroma-cap .track-fill {
+            z-index: 1;
+        }
         .slider-ramp-wrap .track-fill {
             background: #e2e8f0;
         }
@@ -1284,6 +1313,36 @@
 
         function modelToHex(h, s, l) {
             return colorSpace === 'hct' ? hctToHex(h, s, l) : hsluvToHex(h, s, l);
+        }
+
+        function maxHctChroma(hue, tone) {
+            try {
+                const h = ((hue % 360) + 360) % 360;
+                const t = Math.max(0, Math.min(100, tone));
+                return Math.round(Hct.from(h, 200, t).chroma * 10) / 10;
+            } catch {
+                return 100;
+            }
+        }
+
+        function clampHctChromaForStep(h, s, l) {
+            const clamped = clampSliderVal('s', s);
+            if (colorSpace !== 'hct') return clamped;
+            return Math.min(clamped, maxHctChroma(h, l));
+        }
+
+        function useHctChromaCap(pal, wrap) {
+            return colorSpace === 'hct'
+                && pal.selected !== null
+                && wrap?.dataset.prop === 's'
+                && !wrap.classList.contains('ramp-mode')
+                && !wrap.classList.contains('pin-ramp-mode');
+        }
+
+        function syncStepHctChroma(step) {
+            if (colorSpace !== 'hct' || !step) return;
+            const capped = clampHctChromaForStep(step.h, step.s, step.l);
+            if (capped !== step.s) step.s = capped;
         }
 
         function updateColorSpaceLabels(block) {
@@ -3891,7 +3950,11 @@
             const fill = wrap.querySelector('.track-fill');
             if (wrap.classList.contains('slider-inactive')) {
                 hideRampHints(wrap);
+                if (prop === 's') wrap.classList.remove('hct-chroma-cap');
                 return;
+            }
+            if (prop === 's' && !useHctChromaCap(pal, wrap)) {
+                wrap.classList.remove('hct-chroma-cap');
             }
             if (wrap.classList.contains('pin-ramp-mode')) {
                 hideRampHints(wrap);
@@ -3925,9 +3988,31 @@
                 updateRampHints(block, pal, prop);
             } else {
                 hideRampHints(wrap);
-                const v = parseFloat(wrap.querySelector('.ramp-single').value);
-                fill.style.left = '0%';
-                fill.style.width = Math.max(0, ((v - min) / span) * 100) + '%';
+                const useCap = useHctChromaCap(pal, wrap);
+                wrap.classList.toggle('hct-chroma-cap', useCap);
+                const avail = wrap.querySelector('.track-available');
+                const dead = wrap.querySelector('.track-dead');
+                if (useCap) {
+                    const step = pal.steps[pal.selected];
+                    const cap = maxHctChroma(step.h, step.l);
+                    const s = Math.min(step.s, cap);
+                    const pS = ((s - min) / span) * 100;
+                    const pCap = ((cap - min) / span) * 100;
+                    fill.style.left = '0%';
+                    fill.style.width = Math.max(0, pS) + '%';
+                    if (avail) {
+                        avail.style.left = pS + '%';
+                        avail.style.width = Math.max(0, pCap - pS) + '%';
+                    }
+                    if (dead) {
+                        dead.style.left = pCap + '%';
+                        dead.style.width = Math.max(0, 100 - pCap) + '%';
+                    }
+                } else {
+                    const v = parseFloat(wrap.querySelector('.ramp-single').value);
+                    fill.style.left = '0%';
+                    fill.style.width = Math.max(0, ((v - min) / span) * 100) + '%';
+                }
             }
         }
 
@@ -4068,11 +4153,13 @@
 
             const step = pal.steps[pal.selected];
             if (!step) return;
+            syncStepHctChroma(step);
+            const sDisplay = step.s;
             block.querySelector('.input-h').value = step.h;
-            block.querySelector('.input-s').value = step.s;
+            block.querySelector('.input-s').value = sDisplay;
             inputL.value = step.l;
             setValDisplay(block, pal, 'h', [`${Math.round(step.h)}°`]);
-            setValDisplay(block, pal, 's', [step.s.toFixed(1)]);
+            setValDisplay(block, pal, 's', [sDisplay.toFixed(1)]);
             setValDisplay(block, pal, 'l', [step.l.toFixed(1)]);
             updateSliderTrack(block, pal, 'h');
             updateSliderTrack(block, pal, 's');
@@ -4354,14 +4441,19 @@
                     } else {
                         step.l = lv;
                     }
+                    syncStepHctChroma(step);
                     step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
                 } else if (anchorMode) {
                     if (!step.pinned) return;
-                    step[prop] = clampSliderVal(prop, v);
+                    if (prop === 's') step.s = clampHctChromaForStep(step.h, v, step.l);
+                    else step[prop] = clampSliderVal(prop, v);
+                    if (prop === 'h' || prop === 'l') syncStepHctChroma(step);
                     if (prop === 'h' || prop === 's') applyAnchorInterpProp(pal, prop);
                     else step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
                 } else {
-                    step[prop] = v;
+                    if (prop === 'h') step.h = clampSliderVal('h', v);
+                    else if (prop === 's') step.s = clampHctChromaForStep(step.h, v, step.l);
+                    if (prop === 'h') syncStepHctChroma(step);
                     step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
                 }
             }
@@ -4703,6 +4795,8 @@
                                 <span class="ramp-hint ramp-hint-max"></span>
                                 <div class="pin-handles"></div>
                                 <div class="track-bg"></div>
+                                <div class="track-available"></div>
+                                <div class="track-dead"></div>
                                 <div class="track-fill"></div>
                                 <input type="range" class="input-s ramp-single" min="0" max="100" step="0.1">
                                 <input type="range" class="ramp-min ramp-handle" min="0" max="100" step="0.1">
