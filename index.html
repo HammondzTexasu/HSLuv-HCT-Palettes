@@ -1806,6 +1806,20 @@
             });
         }
 
+        function commitToolbarHexField(input, onValidHex) {
+            const norm = normalizeHex(input.value);
+            if (!norm) {
+                input.classList.add('error');
+                setTimeout(() => input.classList.remove('error'), 600);
+                input.blur();
+                return;
+            }
+            input.classList.remove('error');
+            input.value = norm.slice(1);
+            onValidHex(norm);
+            input.blur();
+        }
+
         function attachToolbarColorSwatch(input, onLive, onCommit) {
             const wrap = input.parentElement;
             const swatch = document.createElement('button');
@@ -5018,8 +5032,21 @@
                 applyBgPreview(block, pal);
             };
 
-            hexInput.onkeydown = e => { if (e.key === 'Enter') generateBtn.click(); };
-            bgInput.onkeydown = e => { if (e.key === 'Enter') generateBtn.click(); };
+            hexInput.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                commitToolbarHexField(hexInput, (hex) => { pal.baseHex = hex; });
+            });
+            bgInput.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                clearTimeout(bgHexCommitTimer);
+                commitToolbarHexField(bgInput, (hex) => {
+                    pal.bgHex = hex;
+                    syncToolbarBgSwatch(block, pal);
+                    commitToolbarBgChange(block, pal, pi);
+                });
+            });
 
             if (pi > 0) {
                 const darkModeBtn = document.createElement('button');
