@@ -668,7 +668,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.2rem;
+            gap: 0.15rem;
             flex-shrink: 0;
             width: 100%;
             text-align: center;
@@ -676,7 +676,6 @@
         .swatch-contrast-slot {
             --contrast-row-h: calc(0.72rem * 1.2);
             min-height: var(--contrast-row-h);
-            height: var(--contrast-row-h);
             width: 100%;
             display: flex;
             align-items: center;
@@ -688,6 +687,10 @@
             opacity: 0.85;
             letter-spacing: 0.02em;
             line-height: 1.2;
+            max-width: 100%;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
         .swatch .contrast-line.contrast-editable {
             cursor: text;
@@ -699,7 +702,8 @@
             box-sizing: border-box;
             width: 4.75rem;
             max-width: 100%;
-            height: var(--contrast-row-h);
+            min-height: var(--contrast-row-h);
+            height: auto;
             margin: 0;
             padding: 0 0.15rem;
             font-size: 0.72rem;
@@ -742,8 +746,8 @@
             padding: 0.5rem 0.25rem;
             font-family: ui-monospace, monospace;
         }
-        .swatch.light { color: #0a0a0f; }
-        .swatch.dark { color: #f8fafc; }
+        .swatch.light { color: #000000; }
+        .swatch.dark { color: #ffffff; }
         .swatch.selected { outline: 2px solid var(--accent); outline-offset: 2px; z-index: 1; }
         .steps-ctrl {
             display: flex;
@@ -839,8 +843,15 @@
             height: 16px;
             display: block;
         }
+        .swatch-body {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
         .swatch-above,
-        .swatch-below {
+        .swatch-spacer {
             flex: 1;
             min-height: 0;
             width: 100%;
@@ -881,11 +892,11 @@
             text-shadow: 0 0 3px rgba(0, 0, 0, 0.55), 0 0 2px rgba(255, 255, 255, 0.35);
         }
         .swatch-next-chip.chip-light .swatch-next-chip-label {
-            color: #0a0a0f;
+            color: #000000;
             text-shadow: 0 0 3px rgba(255, 255, 255, 0.65);
         }
         .swatch-next-chip.chip-dark .swatch-next-chip-label {
-            color: #f8fafc;
+            color: #ffffff;
         }
         .palette-row.chips-locked .swatch-next-chip-label {
             display: block;
@@ -1830,7 +1841,14 @@
             return 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
         }
 
-        function isLightHex(hex) {
+        const SWATCH_LT_TEXT_THRESHOLD = 50;
+
+        /** true → třída .light (černý text); L/T > 50 */
+        function swatchTextIsLight(l) {
+            return l > SWATCH_LT_TEXT_THRESHOLD;
+        }
+
+        function isLightBgHex(hex) {
             const y = relativeLuminance(hex);
             return y == null ? true : y > 0.55;
         }
@@ -1903,22 +1921,56 @@
             return (lighter + 0.05) / (darker + 0.05);
         }
 
-        function solveLForWcag(h, s, targetRatio, bgHex, hintL) {
+        /** Primární krok tmavší než ref → v dark módu má být swatch světlejší než pozadí (invert). */
+        function darkModeWcagLighterFromPrimary(primaryFgHex, refBgHex) {
+            const fgY = relativeLuminance(primaryFgHex);
+            const bgY = relativeLuminance(refBgHex);
+            if (fgY == null || bgY == null) return true;
+            return fgY < bgY;
+        }
+
+        function wcagFgPassesPolarity(fgY, bgY, lighterThanBg) {
+            if (lighterThanBg == null || fgY == null || bgY == null) return true;
+            return lighterThanBg ? fgY > bgY : fgY < bgY;
+        }
+
+        function solveLForWcag(h, s, targetRatio, bgHex, hintL, lighterThanBg = null) {
             if (targetRatio == null || !hexToRgb(bgHex)) return hintL;
+            const bgY = relativeLuminance(bgHex);
             let bestL = hintL;
             let bestErr = Infinity;
-            for (let i = 0; i <= 1000; i++) {
-                const l = Math.round(i) / 10;
-                const hex = modelToHex(h, s, l);
-                if (!hex) continue;
-                const r = calcWcagRatio(hex, bgHex);
-                if (r == null) continue;
-                const err = Math.abs(r - targetRatio);
-                if (err < bestErr) {
-                    bestErr = err;
-                    bestL = l;
+
+            const search = (polarity) => {
+                let localBestL = hintL;
+                let localBestErr = Infinity;
+                for (let i = 0; i <= 1000; i++) {
+                    const l = Math.round(i) / 10;
+                    const hex = modelToHex(h, s, l);
+                    if (!hex) continue;
+                    const fgY = relativeLuminance(hex);
+                    if (!wcagFgPassesPolarity(fgY, bgY, polarity)) continue;
+                    const r = calcWcagRatio(hex, bgHex);
+                    if (r == null) continue;
+                    const err = Math.abs(r - targetRatio);
+                    const dist = Math.abs(l - hintL);
+                    if (err < localBestErr - 1e-9 ||
+                        (Math.abs(err - localBestErr) < 1e-9 && dist < Math.abs(localBestL - hintL))) {
+                        localBestErr = err;
+                        localBestL = l;
+                    }
                 }
+                return { l: localBestL, err: localBestErr };
+            };
+
+            let result = search(lighterThanBg);
+            if (lighterThanBg != null && result.err === Infinity) {
+                result = search(null);
             }
+            if (result.err < Infinity) {
+                bestL = result.l;
+                bestErr = result.err;
+            }
+
             return Math.round(Math.max(0, Math.min(100, bestL)) * 10) / 10;
         }
 
@@ -1966,7 +2018,7 @@
             pushHistory();
             setSelection(pal, index);
             const newL = kind === 'wcag'
-                ? solveLForWcag(step.h, step.s, target, pal.bgHex, step.l)
+                ? solveLForWcag(step.h, step.s, target, pal.bgHex, step.l, pal.darkModeWcagLighter?.[index])
                 : solveLForApca(step.h, step.s, target, pal.bgHex, step.l);
             if (pal.darkMode) {
                 commitDarkModeBaseL(pal, index, newL);
@@ -2369,8 +2421,8 @@
             row.classList.add('chips-visible', 'chips-locked');
         }
 
-        function terminalChipFgHex(bgHex) {
-            return isLightHex(bgHex) ? '#FFFFFF' : '#000000';
+        function terminalChipFgHex(step) {
+            return swatchTextIsLight(step.l) ? '#FFFFFF' : '#000000';
         }
 
         function showSwatchChipContextMenu(e, block, pal, pairIndex) {
@@ -2749,7 +2801,7 @@
         /** APCA cíl pro solver — při jiné polaritě pozadí než master obrátit znaménko. */
         function apcaTargetForDmBg(rawLc, masterBg, dmBg) {
             if (rawLc == null || !hexToRgb(masterBg) || !hexToRgb(dmBg)) return rawLc;
-            if (isLightHex(masterBg) === isLightHex(dmBg)) return rawLc;
+            if (isLightBgHex(masterBg) === isLightBgHex(dmBg)) return rawLc;
             if (rawLc === 0) return 0;
             return -rawLc;
         }
@@ -2815,11 +2867,15 @@
             pal.darkModeRefBg = primary.bgHex;
             pal.darkModeWcagTargets = [];
             pal.darkModeApcaTargets = [];
+            pal.darkModeWcagLighter = [];
             pal.dmMasterContrastSnap = [];
             pal.steps.forEach((_, i) => {
+                const pi = Math.min(i, primary.steps.length - 1);
+                const pStep = primary.steps[pi];
                 const c = masterContrastsAt(i);
                 pal.darkModeWcagTargets[i] = c.wcag;
                 pal.darkModeApcaTargets[i] = c.apca;
+                pal.darkModeWcagLighter[i] = darkModeWcagLighterFromPrimary(pStep.hex, primary.bgHex);
                 pal.dmMasterContrastSnap[i] = { wcag: c.wcag, apca: c.apca };
             });
         }
@@ -2842,7 +2898,7 @@
             } else {
                 const wcagT = pal.darkModeWcagTargets?.[i];
                 if (wcagT != null) {
-                    baseL = solveLForWcag(step.h, step.s, wcagT, pal.bgHex, hintL);
+                    baseL = solveLForWcag(step.h, step.s, wcagT, pal.bgHex, hintL, pal.darkModeWcagLighter?.[i]);
                 }
             }
             commitDarkModeBaseL(pal, i, baseL);
@@ -2997,6 +3053,7 @@
                 pal.darkMode = false;
                 pal.darkModeWcagTargets = null;
                 pal.darkModeApcaTargets = null;
+                pal.darkModeWcagLighter = null;
                 pal.darkModeRefBg = null;
                 pal.dmMasterContrastSnap = null;
                 pal.dmBaseL = null;
@@ -3340,6 +3397,7 @@
                 dmContrastMetric: 'wcag',
                 darkModeWcagTargets: null,
                 darkModeApcaTargets: null,
+                darkModeWcagLighter: null,
                 darkModeRefBg: null,
                 dmMasterContrastSnap: null,
                 dmGain: 0,
@@ -3956,7 +4014,7 @@
             row.replaceChildren();
             pal.steps.forEach((step, si) => {
                 const el = document.createElement('div');
-                el.className = `swatch ${isLightHex(step.hex) ? 'light' : 'dark'}${pal.selected === si ? ' selected' : ''}`;
+                el.className = `swatch ${swatchTextIsLight(step.l) ? 'light' : 'dark'}${pal.selected === si ? ' selected' : ''}`;
                 el.dataset.step = String(si);
                 el.style.background = step.hex;
 
@@ -3985,14 +4043,15 @@
                 nextChip.className = 'swatch-next-chip';
                 nextChip.title = 'Náhled dalšího kroku';
                 const nextStep = pal.steps[si + 1];
-                const chipFgHex = nextStep ? nextStep.hex : terminalChipFgHex(step.hex);
+                const chipFgHex = nextStep ? nextStep.hex : terminalChipFgHex(step);
                 nextChip.style.background = chipFgHex;
                 const chipWcag = calcWcagRatio(chipFgHex, step.hex);
                 const chipLabel = document.createElement('span');
                 chipLabel.className = 'swatch-next-chip-label contrast-line';
                 chipLabel.textContent = chipWcag == null ? '—' : `WCAG ${chipWcag.toFixed(2)}:1`;
                 nextChip.appendChild(chipLabel);
-                nextChip.classList.add(isLightHex(chipFgHex) ? 'chip-light' : 'chip-dark');
+                const chipTextL = nextStep ? nextStep.l : (step.l > SWATCH_LT_TEXT_THRESHOLD ? 100 : 0);
+                nextChip.classList.add(swatchTextIsLight(chipTextL) ? 'chip-light' : 'chip-dark');
                 if (nextStep) {
                     nextChip.addEventListener('contextmenu', (e) => {
                         showSwatchChipContextMenu(e, block, pal, si);
@@ -4001,8 +4060,8 @@
                 wireSwatchNextChip(nextChip, block);
                 above.appendChild(nextChip);
 
-                const below = document.createElement('div');
-                below.className = 'swatch-below';
+                const spacer = document.createElement('div');
+                spacer.className = 'swatch-spacer';
 
                 const hexRow = document.createElement('div');
                 hexRow.className = 'swatch-hex-row';
@@ -4077,6 +4136,10 @@
                 const center = document.createElement('div');
                 center.className = 'swatch-hex-center';
                 center.appendChild(hexRow);
+
+                const body = document.createElement('div');
+                body.className = 'swatch-body';
+                body.append(above, center, spacer);
 
                 const apca = getApcaContrast(step.hex, pal.bgHex);
                 const wcag = calcWcagRatio(step.hex, pal.bgHex);
@@ -4153,7 +4216,7 @@
                     wcag == null ? '' : wcag.toFixed(2)
                 );
 
-                el.append(head, above, center, below, contrasts);
+                el.append(head, body, contrasts);
 
                 el.onclick = () => {
                     setSelection(pal, si);
