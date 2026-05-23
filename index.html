@@ -198,13 +198,14 @@
             color: #94a3b8;
         }
         .dm-gain-field {
-            min-width: 9.5rem;
-            max-width: 12rem;
-            flex: 1 1 9.5rem;
+            min-width: 14rem;
+            max-width: 22rem;
+            flex: 1 1 16rem;
         }
         .dm-gain-field.dm-gain-hidden,
         .dm-contrast-metric-field.dm-gain-hidden {
-            display: none !important;
+            visibility: hidden;
+            pointer-events: none;
         }
         .dm-contrast-metric-field {
             flex: 0 0 auto;
@@ -214,6 +215,17 @@
         }
         .dm-gain-field .slider-ramp-wrap {
             width: 100%;
+        }
+        .slider-ramp-wrap[data-prop="gain"]:not(.ramp-mode) .track-bg::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.22);
+            transform: translateX(-50%);
+            pointer-events: none;
         }
         .interp-ctx-menu,
         .swatch-ctx-menu,
@@ -2085,25 +2097,34 @@
             if (swatch) updateToolbarSwatch(swatch, pal.bgHex);
         }
 
-        function commitToolbarBgChange(block, pal, pi) {
+        function applyToolbarBgLive(block, pal, pi) {
             if (!hexToRgb(pal.bgHex)) return;
+            applyBgPreview(block, pal);
             if (pi === 0) {
                 afterPrimaryPaletteChange();
-                if (block) {
-                    updateSwatches(block, pal);
-                    syncEditor(block, pal);
-                }
             } else if (pal.darkMode) {
                 recalcStepsLForDarkMode(pal);
-                if (block) {
-                    updateSwatches(block, pal);
-                    syncEditor(block, pal);
-                }
+            }
+            if (block && (pi === 0 || pal.darkMode)) {
+                updateSwatches(block, pal);
+                syncEditor(block, pal);
             }
         }
 
+        function commitToolbarBgChange(block, pal, pi) {
+            applyToolbarBgLive(block, pal, pi);
+        }
+
+        const DM_OFFSET_MIN = -50;
+        const DM_OFFSET_MAX = 50;
+
         function clampGain(n) {
-            return Math.round(Math.max(0, Math.min(100, n)));
+            return Math.round(Math.max(DM_OFFSET_MIN, Math.min(DM_OFFSET_MAX, n)));
+        }
+
+        function formatOffsetDisplay(n) {
+            const v = clampGain(n);
+            return v > 0 ? `+${v}` : String(v);
         }
 
         const INTERP_BEZIER_LINEAR = [0, 0, 1, 1];
@@ -2282,7 +2303,7 @@
                     return `Křivka · ${stepScaleName(i0)}–${stepScaleName(i1)}`;
                 }
             }
-            if (prop === 'gain') return 'Křivka · Gain';
+            if (prop === 'gain') return 'Křivka · Offset';
             const labels = AXIS_LABELS[colorSpace];
             if (prop === 'h') return `Křivka · ${labels.h}`;
             if (prop === 's') return `Křivka · ${labels.s}`;
@@ -2896,8 +2917,8 @@
         function updateDmDarkToolbarVisibility(block, pal) {
             const show = !!pal.darkMode;
             block.querySelectorAll('.dm-gain-field, .dm-contrast-metric-field').forEach(field => {
-                field.hidden = !show;
                 field.classList.toggle('dm-gain-hidden', !show);
+                field.setAttribute('aria-hidden', show ? 'false' : 'true');
             });
         }
 
@@ -2940,12 +2961,14 @@
             if (!pal.dmGainRamp) {
                 hideRampHints(wrap);
                 wrap.querySelector('.ramp-single').value = pal.dmGain ?? 0;
-                setValDisplay(block, pal, 'gain', [String(pal.dmGain ?? 0)]);
+                setValDisplay(block, pal, 'gain', [formatOffsetDisplay(pal.dmGain ?? 0)]);
             } else {
                 wrap.querySelector('.ramp-min').value = pal.dmGainStart ?? 0;
                 wrap.querySelector('.ramp-max').value = pal.dmGainEnd ?? 0;
-                setValDisplay(block, pal, 'gain',
-                    [String(pal.dmGainStart ?? 0), String(pal.dmGainEnd ?? 0)], '–');
+                setValDisplay(block, pal, 'gain', [
+                    formatOffsetDisplay(pal.dmGainStart ?? 0),
+                    formatOffsetDisplay(pal.dmGainEnd ?? 0)
+                ], '–');
             }
             updateSliderTrack(block, pal, 'gain');
             const valWrap = block.querySelector('.val-wrap[data-prop="gain"]');
@@ -3061,6 +3084,9 @@
                 delete pal.hexEditT;
                 delete pal.selectedT;
                 if (!pal.dmContrastMetric) pal.dmContrastMetric = 'wcag';
+                if (pal.dmGain != null) pal.dmGain = clampGain(pal.dmGain);
+                if (pal.dmGainStart != null) pal.dmGainStart = clampGain(pal.dmGainStart);
+                if (pal.dmGainEnd != null) pal.dmGainEnd = clampGain(pal.dmGainEnd);
             });
         }
 
@@ -4141,7 +4167,9 @@
         }
 
         function rampRange(prop) {
-            return prop === 'h' ? { min: 0, max: 360 } : { min: 0, max: 100 };
+            if (prop === 'h') return { min: 0, max: 360 };
+            if (prop === 'gain') return { min: DM_OFFSET_MIN, max: DM_OFFSET_MAX };
+            return { min: 0, max: 100 };
         }
 
         const RAMP_THUMB_PX = 14;
@@ -4360,8 +4388,16 @@
                     }
                 } else {
                     const v = parseFloat(wrap.querySelector('.ramp-single').value);
-                    fill.style.left = '0%';
-                    fill.style.width = Math.max(0, ((v - min) / span) * 100) + '%';
+                    const trackW = sliderTrackWidth(wrap);
+                    if (prop === 'gain' && trackW >= 1) {
+                        const p0 = valueToTrackPct(0, min, max, trackW);
+                        const pV = valueToTrackPct(v, min, max, trackW);
+                        fill.style.left = Math.min(p0, pV) + '%';
+                        fill.style.width = Math.abs(pV - p0) + '%';
+                    } else {
+                        fill.style.left = '0%';
+                        fill.style.width = Math.max(0, ((v - min) / span) * 100) + '%';
+                    }
                 }
             }
         }
@@ -4863,7 +4899,7 @@
                 bgInput,
                 (hex) => {
                     pal.bgHex = hex;
-                    applyBgPreview(block, pal);
+                    applyToolbarBgLive(block, pal, pi);
                 },
                 () => commitToolbarBgChange(block, pal, pi)
             );
@@ -4871,11 +4907,10 @@
             let bgHexCommitTimer = 0;
             wireToolbarHexInput(bgInput, (hex) => {
                 pal.bgHex = hex;
-                applyBgPreview(block, pal);
                 syncToolbarBgSwatch(block, pal);
                 clearTimeout(bgHexCommitTimer);
                 bgHexCommitTimer = setTimeout(
-                    () => commitToolbarBgChange(block, pal, pi),
+                    () => applyToolbarBgLive(block, pal, pi),
                     150
                 );
             });
@@ -4933,7 +4968,7 @@
                 const dmContrastMetricField = document.createElement('div');
                 dmContrastMetricField.className = 'toolbar-field dm-contrast-metric-field' +
                     (pal.darkMode ? '' : ' dm-gain-hidden');
-                dmContrastMetricField.hidden = !pal.darkMode;
+                dmContrastMetricField.setAttribute('aria-hidden', pal.darkMode ? 'false' : 'true');
                 dmContrastMetricField.append('Kontrast');
                 const dmMetricBtns = document.createElement('div');
                 dmMetricBtns.className = 'color-space-toggle-btns';
@@ -4951,17 +4986,17 @@
                 const dmGainField = document.createElement('label');
                 dmGainField.className = 'toolbar-field dm-gain-field' +
                     (pal.darkMode ? '' : ' dm-gain-hidden');
-                dmGainField.hidden = !pal.darkMode;
+                dmGainField.setAttribute('aria-hidden', pal.darkMode ? 'false' : 'true');
                 dmGainField.innerHTML = `
-                    <span class="slider-top"><span>Gain</span><span class="val-wrap" data-prop="gain"></span></span>
-                    <div class="slider-ramp-wrap" data-prop="gain" title="Alt+klik: rampa začátek–konec">
+                    <span class="slider-top"><span>Offset</span><span class="val-wrap" data-prop="gain"></span></span>
+                    <div class="slider-ramp-wrap" data-prop="gain" title="Alt+klik: rampa začátek–konec (−50 … +50)">
                         <span class="ramp-hint ramp-hint-min"></span>
                         <span class="ramp-hint ramp-hint-max"></span>
                         <div class="track-bg"></div>
                         <div class="track-fill"></div>
-                        <input type="range" class="input-gain ramp-single" min="0" max="100" step="1">
-                        <input type="range" class="ramp-min ramp-handle" min="0" max="100" step="1">
-                        <input type="range" class="ramp-max ramp-handle" min="0" max="100" step="1">
+                        <input type="range" class="input-gain ramp-single" min="-50" max="50" step="1" value="0">
+                        <input type="range" class="ramp-min ramp-handle" min="-50" max="50" step="1" value="0">
+                        <input type="range" class="ramp-max ramp-handle" min="-50" max="50" step="1" value="0">
                     </div>
                 `;
                 const gainWrap = dmGainField.querySelector('.slider-ramp-wrap[data-prop="gain"]');
