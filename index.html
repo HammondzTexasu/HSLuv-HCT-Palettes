@@ -1302,9 +1302,38 @@
     <div id="palettesContainer"></div>
 
     <script type="module">
-        import { Hsluv } from 'https://esm.sh/hsluv@1.0.1';
-        import { Hct } from 'https://esm.sh/@material/material-color-utilities@0.3.0';
-        import { sRGBtoY } from 'https://esm.sh/apca-w3@0.1.9';
+        const VENDOR_BASE = new URL('./vendor/', import.meta.url).href;
+        const DEPS = {
+            hsluv: {
+                cdn: 'https://esm.sh/hsluv@1.0.1',
+                local: VENDOR_BASE + 'hsluv.mjs'
+            },
+            hct: {
+                cdn: 'https://esm.sh/@material/material-color-utilities@0.3.0',
+                local: VENDOR_BASE + 'material-color-utilities.mjs'
+            },
+            apca: {
+                cdn: 'https://esm.sh/apca-w3@0.1.9',
+                local: VENDOR_BASE + 'apca-w3.mjs'
+            }
+        };
+
+        async function importWithFallback({ cdn, local }) {
+            try {
+                return await import(cdn);
+            } catch {
+                return await import(local);
+            }
+        }
+
+        const [hsluvMod, hctMod, apcaMod] = await Promise.all([
+            importWithFallback(DEPS.hsluv),
+            importWithFallback(DEPS.hct),
+            importWithFallback(DEPS.apca)
+        ]);
+        const { Hsluv } = hsluvMod;
+        const { Hct } = hctMod;
+        const { sRGBtoY } = apcaMod;
 
         const COLOR_SPACE = 'srgb';
         const L_START = 95;
@@ -3610,8 +3639,12 @@
                 maxIn.value = pal.steps[n - 1][prop];
                 if (prop === 'h') pal.hRamp = true;
                 else pal.sRamp = true;
+                ensureInterpCurvesForPalette(pal, prop);
+                applyPropRamp(pal, prop);
             }
             syncEditor(block, pal);
+            updateSwatches(block, pal);
+            if (isPrimaryPalette(pal)) afterPrimaryPaletteChange();
         }
 
         function updatePinValDisplay(block, pal, prop) {
@@ -4492,8 +4525,7 @@
                     rampOn = whole && pal.lInterp && !pinOn;
                 } else {
                     const ramp = prop === 'h' ? pal.hRamp : pal.sRamp;
-                    const endpointMode = anchorMode && !hsPinViewEnabled(pal, prop);
-                    rampOn = whole && !pinOn && (ramp || endpointMode);
+                    rampOn = whole && !pinOn && ramp;
                 }
                 wrap.classList.toggle('pin-ramp-mode', pinOn);
                 wrap.classList.toggle('ramp-mode', rampOn);
@@ -4582,7 +4614,7 @@
                 if (usePropPinHandles(pal, 'h')) {
                     updatePinValDisplay(block, pal, 'h');
                     updateSliderTrack(block, pal, 'h');
-                } else if (pal.hRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 'h'))) {
+                } else if (pal.hRamp) {
                     const { start, end } = rampSliderValues(pal, 'h');
                     const wrap = block.querySelector('.slider-ramp-wrap[data-prop="h"]');
                     wrap.querySelector('.ramp-min').value = start;
@@ -4599,7 +4631,7 @@
                 if (usePropPinHandles(pal, 's')) {
                     updatePinValDisplay(block, pal, 's');
                     updateSliderTrack(block, pal, 's');
-                } else if (pal.sRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 's'))) {
+                } else if (pal.sRamp) {
                     const { start, end } = rampSliderValues(pal, 's');
                     const wrap = block.querySelector('.slider-ramp-wrap[data-prop="s"]');
                     wrap.querySelector('.ramp-min').value = start;
@@ -4768,7 +4800,7 @@
                     onPinSlider(block, pal, 'h', idx, String(v));
                     return true;
                 }
-                if (pal.hRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 'h'))) {
+                if (pal.hRamp) {
                     onRampSlider(block, pal, 'h', idx === 0 ? 'min' : 'max', String(v));
                     return true;
                 }
@@ -4784,7 +4816,7 @@
                     onPinSlider(block, pal, 's', idx, String(v));
                     return true;
                 }
-                if (pal.sRamp || (isAnchorMode(pal) && !hsPinViewEnabled(pal, 's'))) {
+                if (pal.sRamp) {
                     onRampSlider(block, pal, 's', idx === 0 ? 'min' : 'max', String(v));
                     return true;
                 }
@@ -4897,10 +4929,25 @@
             const anchorMode = isAnchorMode(pal);
             if (pal.selected === null) {
                 if (prop === 'l') return;
-                if (anchorMode) return;
-                if ((prop === 'h' && pal.hRamp) || (prop === 's' && pal.sRamp)) return;
-                pal.steps.forEach(step => { step[prop] = clampSliderVal(prop, v); });
-                refreshStepHex(pal);
+                if (anchorMode) {
+                    if (prop !== 'h' && prop !== 's') return;
+                    if ((prop === 'h' && pal.hRamp) || (prop === 's' && pal.sRamp)) return;
+                    if (usePropPinHandles(pal, prop)) return;
+                    const val = clampSliderVal(prop, v);
+                    pal.steps.forEach(step => {
+                        if (prop === 'h') {
+                            step.h = val;
+                            step.s = clampHctChromaForStep(step.h, step.s, step.l);
+                        } else {
+                            step.s = clampHctChromaForStep(step.h, val, step.l);
+                        }
+                        step.hex = modelToHex(step.h, step.s, step.l) ?? step.hex;
+                    });
+                } else {
+                    if ((prop === 'h' && pal.hRamp) || (prop === 's' && pal.sRamp)) return;
+                    pal.steps.forEach(step => { step[prop] = clampSliderVal(prop, v); });
+                    refreshStepHex(pal);
+                }
             } else {
                 const step = pal.steps[pal.selected];
                 if (prop === 'l') {
